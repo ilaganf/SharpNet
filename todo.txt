@@ -19,6 +19,8 @@ Reconstruction Network
 
 TODO (mark items with **[COMPLETE]** when done):
     - get data (MS-COCO or the like)
+        * may want to instead write script to download data (so as to 
+          not anger github and make it easier to work on the cloud)
     - format data pipeline (tf.data.Dataset object?) (https://www.tensorflow.org/
       programmers_guide/datasets)
         * pre-process training examples (using Dataset API)
@@ -47,6 +49,8 @@ TODO (mark items with **[COMPLETE]** when done):
                output images) to calculate loss
             5. Keep loss network weights constant, backprop into weights of 
                reconstruction layer
+        * create infrastructure for easily modifying hyperparameters
+        * create infrastructure for easily saving and restoring weights
     - implement evaluation and testing
         * basically just calculate loss using above steps on the validation/testing set
     - implement prediction
@@ -55,3 +59,28 @@ TODO (mark items with **[COMPLETE]** when done):
         * Output beautiful high-resolution images (that we should save for error analysis)
     - run a few original, out of dataset images through the network for the
       poster and posterity
+
+Design notes:
+    - Python 3.6
+    - BE SURE TO COMMIT BEFORE MAKING MAJOR ARCHITECTURE CHANGES
+        * Don't push to master, use branches like civilized humans (looking at you Anoop)
+        * We probably should wait to merge pull requests until we get group consensus
+    - main.py responsible for interacting with client, loading best model, 
+      loading prediction images, and saving the high-resolution versions
+        * out-of-dataset images for prediction go into ./prediction_input/ folder, outputs
+          into the aptly named ./prediction_output/ folder
+    - train.py responsible for:
+        * taking experiment name and hyperparameter flags from user (like learning rate)
+        * coordinating construction of compliant model
+        * creating TensorFlow session to initialize and run prediction tensor
+        * saving hyperparameters and checkpoints into the right place in ./experiments/
+    - ./architecture/ should hold all files related to defining the model
+        * reconstruction network, loss network, and combined final network
+          wrapped in Estimator object
+        * each network defined/loaded in a separate file
+    - ./data/ should hold the data and any necessary pre-processing files
+        * as noted above, should look into writing a script for downloading the data
+          if we're using a widely available dataset
+    - do your best to comment (at least document what the inputs/outputs are/should be
+      at the top of the function)
+
