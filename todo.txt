@@ -1,0 +1,57 @@
+todo.txt
+
+Overall Architecture - follwing Justin's paper
+    - input: blurred, downscaled, then interpolated 
+             to original size image
+    - output: high-resolution image
+    - label: original image before blurring/scaling
+    - model: input --> reconstruction network --> 
+             output --> loss network (fixed, non-trainable) --> perceptual loss
+    - minimize perceptual loss: backprop into reconstruction network
+
+
+Reconstruction Network
+    - input: 288x288x3 image
+    - Justin's paper: deep convolutional resnet (5? residual blocks)
+    - may want to experiment with different architectures
+    - keep fully convolutional so can be applied to any size image
+
+
+TODO (mark items with **[COMPLETE]** when done):
+    - get data (MS-COCO or the like)
+    - format data pipeline (tf.data.Dataset object?) (https://www.tensorflow.org/
+      programmers_guide/datasets)
+        * pre-process training examples (using Dataset API)
+        * potentially augment data
+        * define training/validation/testing split
+    - define reconstruction network architecture
+        * room to play here as long as it's end to end (image in, image out)
+        * want to experiment with resnet + inception based architectures
+    - choose and download top-of-the-line loss network (Inception Net?)
+        * additionally need to choose which activation layer 
+          we pull our target "content" vector out of
+    - define loss function:
+        * perceptual loss obviously
+        * include pixel loss?
+        * numerical approximations of other image structure losses (e.g. SSIM)?
+    - implement training loop
+        * may want to use tf.Estimator object (https://www.tensorflow.org/versions/
+          r1.4/api_docs/python/tf/estimator/Estimator)
+        * on each training image, need to do a few main things:
+            1. Feed image through reconstruction network to get output image
+            2. Feed output image through loss network to get content vector
+            3. Feed ground-truth image through loss network to get
+               target content vector (NOTE: can possibly visualize these activations
+               so we know what the network is looking at in the original image, content-wise)
+            4. Use vectors from (2) and (3) (and potentially the input and 
+               output images) to calculate loss
+            5. Keep loss network weights constant, backprop into weights of 
+               reconstruction layer
+    - implement evaluation and testing
+        * basically just calculate loss using above steps on the validation/testing set
+    - implement prediction
+        * Re-load best model weights
+        * Be able to take any amount of images as input
+        * Output beautiful high-resolution images (that we should save for error analysis)
+    - run a few original, out of dataset images through the network for the
+      poster and posterity
