@@ -1,0 +1,1 @@
+{"experiment_name": "baseline", "basepath": "./experiments/baseline", "checkpoints": "./experiments/baseline/weights/", "save_every": 1, "learning_rate": 0.01, "num_epochs": 5, "batch_size": 16, "eval_size": 16}
