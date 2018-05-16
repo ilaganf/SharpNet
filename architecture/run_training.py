@@ -14,7 +14,7 @@ def train(train_model, dev_model, config):
         sess.run(tf.global_variables_initializer())
         sess.run(train_model.iter_init_op)
 
-        train_writer = tf.summary.FileWriter('.summaries/train/')
+        train_writer = tf.summary.FileWriter('./summaries/train/')
         val_writer = tf.summary.FileWriter('./summaries/val/')
         # TODO: Tensorboard integration
 
@@ -24,7 +24,7 @@ def train(train_model, dev_model, config):
             num_steps = (config.train_size + config.batch_size - 1) // config.batch_size
 
             for t in range(num_steps):
-                prediction, loss = train_step(train_model, config, sess, val_writer)
+                prediction, loss = train_step(train_model, config, sess, train_writer)
                 if t % 10 == 0:
                     print("Iteration {} loss: {}".format(t, loss))
 

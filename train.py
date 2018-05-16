@@ -28,7 +28,7 @@ def main():
     # Make experiments reproducible
     tf.set_random_seed(12345)
 
-    param = config.Config("test")
+    param = config.Config("baseline")
 
     # logging
     # TODO
@@ -37,7 +37,6 @@ def main():
                    if f.endswith('.jpg') or f.endswith('.png')]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
                    if f.endswith('.jpg') or f.endswith('.png')]
-
     train_data, train_initializer = input_op(train_files, param, is_training=True)
     dev_data, dev_initializer = input_op(train_files, param, is_training=False)
 

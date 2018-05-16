@@ -31,7 +31,7 @@ def input_op(filenames, params, is_training):
     # Load all the images from the filenames,
     # Properly re-size them all, then create low-res
     # versions of all the input images to use as training input
-    dataset = dataset.map(lambda x: parse_image_fn(x))
+    
     if is_training:
         # Shuffle all the input and repeat for unlimited epochs
         dataset = dataset.shuffle(10000).repeat()

@@ -21,6 +21,7 @@ class EnhanceNet():
         # Iterator over dataset object
         self.inputs = inputs['low-res']
         self.labels = inputs['high-res']
+        print(self.labels)
         self.iter_init_op = inputs_initializer
         
         # Config object that holds hyperparameters
@@ -32,7 +33,6 @@ class EnhanceNet():
         self.optimizer_op = None
         self.mse_op = None
         self.is_training = is_training
-        self
         
     def add_prediction_op(self):
         with tf.variable_scope('model_prediction', reuse=(not self.is_training)):
@@ -69,7 +69,9 @@ class EnhanceNet():
             return loss
 
     def add_psnr_op(self):
-        return tf.image.psnr(self.prediction_op, self.labels, max_val=1.0, name='psnr_op')
+        labels = tf.reshape(self.labels, (16, 288, 288, 3))
+        pred = tf.reshape(self.prediction_op, (16, 288, 288, 3))
+        return tf.image.psnr(pred, labels, max_val=1.0, name='psnr_op')
 
     def add_ssim_op(self):
         return tf.image.ssim(self.prediction_op, self.labels, max_val=1.0)
@@ -96,10 +98,12 @@ class EnhanceNet():
 
     def variable_summaries(self):
         #tf.summary.scalar("Mean Squared Error", self.mse_op)
-        #tf.summary.scalar("Peak Signal-to-Noise Ratio", self.psnr_op)
-        #tf.summary.scalar("Structural Similarity", self.ssim_op)
-        tf.summary.scalar("Loss", self.loss_op)
-        weights = [var for var in tf.trainable_variables() if 'weights' in str(var)]
-        l2 = np.sum([tf.nn.l2_loss(var) for var in weights])
-        tf.summary.scalar("L2 norm", l2)
-        self.merged = tf.summary.merge_all()
+        
+        with tf.variable_scope("metrics"):
+            #tf.summary.scalar("Peak Signal-to-Noise Ratio", self.psnr_op)
+            #tf.summary.scalar("Structural Similarity", self.ssim_op)
+            tf.summary.scalar("Loss", self.loss_op)
+            weights = [var for var in tf.trainable_variables() if 'model_prediction' in str(var)]
+            l2 = np.sum([tf.nn.l2_loss(var) for var in weights])
+            tf.summary.scalar("L2 norm", l2)
+            self.merged = tf.summary.merge_all()
