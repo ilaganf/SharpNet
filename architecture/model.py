@@ -15,11 +15,12 @@ class EnhanceNet():
     Object that defines all the necessary operations
     so they can be readily accessed for training/testing
     '''
-    def __init__(self, inputs, config, is_training=True):
+    def __init__(self, inputs, inputs_initializer, config, is_training=True):
 
         # Iterator over dataset object
-        self.inputs = inputs[0]
-        self.labels = inputs[1]
+        self.inputs = inputs['low-res']
+        self.labels = inputs['high-res']
+        self.iter_init_op = inputs_initializer
 
         # Config object that holds hyperparameters
         self.config = config
