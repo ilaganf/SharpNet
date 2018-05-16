@@ -14,6 +14,8 @@ def train(train_model, dev_model, config):
         sess.run(tf.global_variables_initializer())
         sess.run(train_model.iter_init_op)
 
+        train_writer = tf.summary.FileWriter('.summaries/train/')
+        val_writer = tf.summary.FileWriter('./summaries/val/')
         # TODO: Tensorboard integration
 
         best_dev = float('inf')
@@ -22,7 +24,7 @@ def train(train_model, dev_model, config):
             num_steps = (config.train_size + config.batch_size - 1) // config.batch_size
 
             for t in range(num_steps):
-                prediction, loss = train_step(train_model, config, sess)
+                prediction, loss = train_step(train_model, config, sess, val_writer)
                 if t % 10 == 0:
                     print("Iteration {} loss: {}".format(t, loss))
 
@@ -32,15 +34,16 @@ def train(train_model, dev_model, config):
                 num_steps = (config.eval_size + config.batch_size - 1) // config.batch_size
                 sess.run(dev_model.iter_init_op)
                 for _ in range(num_steps):
-                    mse = sess.run(dev_model.mse_op)
+                    summary = sess.run([dev_model.merged])
+                    val_writer.add_summary(summary)
                 if mse < best_dev:
                     best_dev = mse
                     saver.save(config.checkpoints)
                 print("Dev MSE: {}".format(best_dev))
 
 
-def train_step(model, config, sess):
+def train_step(model, config, sess, train_writer):
     global_step = tf.train.get_global_step()
-    _, high_res, loss, global_step_val = sess.run([model.train_op, model.prediction_op,
-                                                   model.loss_op, global_step])
+    _, high_res, loss, summary, global_step = sess.run([model.train_op, model.prediction_op, model.loss_op, model.merged, global_step])
+    train_writer.add_summary(summary, global_step)
     return high_res, loss

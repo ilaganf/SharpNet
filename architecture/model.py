@@ -7,7 +7,7 @@ Will implement as a class that contains each of the
 necessary operations
 '''
 import tensorflow as tf
-
+import numpy as np
 import architecture.config
 
 class EnhanceNet():
@@ -32,6 +32,7 @@ class EnhanceNet():
         self.optimizer_op = None
         self.mse_op = None
         self.is_training = is_training
+        self
         
     def add_prediction_op(self):
         with tf.variable_scope('model_prediction', reuse=(not self.is_training)):
@@ -91,4 +92,14 @@ class EnhanceNet():
         self.loss_op = self.add_loss_op()
         if self.is_training:
             self.train_op = self.add_training_op()
-        
+        self.variable_summaries()
+
+    def variable_summaries(self):
+        #tf.summary.scalar("Mean Squared Error", self.mse_op)
+        #tf.summary.scalar("Peak Signal-to-Noise Ratio", self.psnr_op)
+        #tf.summary.scalar("Structural Similarity", self.ssim_op)
+        tf.summary.scalar("Loss", self.loss_op)
+        weights = [var for var in tf.trainable_variables() if 'weights' in str(var)]
+        l2 = np.sum([tf.nn.l2_loss(var) for var in weights])
+        tf.summary.scalar("L2 norm", l2)
+        self.merged = tf.summary.merge_all()

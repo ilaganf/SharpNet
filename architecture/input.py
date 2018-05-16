@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import scipy.stats as st
 import scipy
-import config as config
+import architecture.config as config
 
 test_image = "../data/test2017/000000000001.jpg"
 
@@ -32,17 +32,14 @@ def input_op(filenames, params, is_training):
     # Load all the images from the filenames,
     # Properly re-size them all, then create low-res
     # versions of all the input images to use as training input
-    print(dataset)
+    dataset = dataset.map(lambda x: parse_image_fn(x))
     if is_training:
         # Shuffle all the input and repeat for unlimited epochs
-        dataset = dataset.shuffle(len(filenames)).repeat()
-        
-    dataset = dataset.map(lambda x: parse_image_fn(x))
+        dataset = dataset.shuffle(1000).repeat()
     dataset = dataset.batch(params.batch_size).prefetch(1)
 
     iterator = dataset.make_initializable_iterator()
     images = iterator.get_next()
-    print(images)
     iterator_init = iterator.initializer
 
     return images, iterator_init
@@ -89,14 +86,10 @@ def low_res_fn(image):
     
     filter = tf.constant(gauss_kernel())
     image = tf.expand_dims(image, axis=0)
-    print(filter, image)
     blurred = tf.nn.depthwise_conv2d(image, filter, strides=[1,1,1,1], padding="SAME", name="gaussian_blur")
-    print(blurred)
     downscaled = tf.image.resize_images(blurred, config.downscale_size, method=tf.image.ResizeMethod.BICUBIC)
-    print(downscaled)
     upscaled = tf.image.resize_images(downscaled, [288, 288], method=tf.image.ResizeMethod.BICUBIC)
     upscaled = tf.squeeze(upscaled, axis=0)
-    print(upscaled)
     return upscaled
 
 if __name__=="__main__":
@@ -107,5 +100,4 @@ if __name__=="__main__":
         fd = {image_placeholder:file}
         output = sess.run(upscaled, feed_dict=fd)
     output = np.squeeze(output)
-    print(output.shape)
     scipy.misc.imsave("my_img.jpg", output)
