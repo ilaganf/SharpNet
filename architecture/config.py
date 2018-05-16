@@ -17,7 +17,13 @@ class Config():
             os.mkdir(self.basepath)
             os.mkdir(self.checkpoints)
         self.write_params(self.basepath+'params.json')
+
+        # temp - until we build file architecture, need these params
         self.save_every = 10
+        self.learning_rate = 0.01
+        self.num_epochs = 5
+        self.batch_size = 2
+        
 
     def load_params(self, filename):
         with open(filename) as f:

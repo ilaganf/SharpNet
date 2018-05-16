@@ -10,8 +10,11 @@ import os
 
 import tensorflow as tf
 
+import architecture
 from architecture.config import Config
 from architecture.input import input_op
+from architecture.model import EnhanceNet
+
 
 TRAIN_DIR = './data/train/'
 DEV_DIR = './data/dev/'
@@ -47,6 +50,13 @@ def main():
     train_data, train_initializer = input_op(train_files, config, is_training=True)
     dev_data, dev_initializer = input_op(train_files, config, is_training=False)
 
+    config = Config("test")
+    train_model = EnhanceNet(train_data, train_initializer, config, is_training=True)
+    train_model.build_model()
+    dev_model = EnhanceNet(dev_data, dev_initializer, config, is_training=False)
+    dev_model.build_model()
+
+    architecture.run_training.train(train_model, dev_model, config)
 
 
 if __name__ == '__main__':

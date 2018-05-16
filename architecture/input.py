@@ -36,7 +36,6 @@ def input_op(filenames, params, is_training):
     iterator_init = iterator.initializer
 
     return images, iterator_init
-    # return dataset.make_one_shot_iterator().get_next()
 
 
 def parse_image_fn(fname1, fname2):
