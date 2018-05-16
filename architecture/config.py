@@ -37,10 +37,10 @@ class Config():
         self.write_params(self.basepath+'params.json')
 
         # temp - until we build file architecture, need these params
-        self.save_every = 10
+        self.save_every = 1
         self.learning_rate = 0.01
         self.num_epochs = 5
-        self.batch_size = 2
+        self.batch_size = 512
         self.train_size = None
         self.dev_size = None
 
