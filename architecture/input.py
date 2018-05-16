@@ -17,7 +17,7 @@ def input_op(filenames, params, is_training):
     Args:
         filenames: list of filenames (including path) of input images
         params: Config object that contains model hyperparameters
-        is_training: boolean of wheter 
+        is_training: boolean of whether or not we're training
     '''
     dataset = tf.data.Dataset.from_tensor_slices({'low-res': tf.constant(filenames),
                                                   'high-res': tf.constant(filenames)})
