@@ -7,6 +7,8 @@ for holding hyperparameters for the model
 
 import json
 
+downscale_size=(144,144)
+
 class Config():
 
     def load_params(self, filename):
