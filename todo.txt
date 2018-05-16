@@ -21,8 +21,8 @@ TODO (mark items with **[COMPLETE]** when done):
     - get data (MS-COCO or the like)
         * may want to instead write script to download data (so as to 
           not anger github and make it easier to work on the cloud)
-    - format data pipeline (tf.data.Dataset object?) (https://www.tensorflow.org/
-      programmers_guide/datasets)
+**[COMPLETE]** - format data pipeline (tf.data.Dataset object?) (https://www.tensorflow.org/
+      programmers_guide/datasets) 
         * pre-process training examples (using Dataset API)
         * potentially augment data
         * define training/validation/testing split

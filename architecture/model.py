@@ -10,9 +10,13 @@ import tensorflow as tf
 
 import config
 
-def enhance_net(input):
+class EnhanceNet():
     '''
-    Returns function that defines the tensorflow model:
-    model_fn(features, labels, mode, config)
+    Object that defines all the necessary operations
+    so they can be readily accessed for training/testing
     '''
-    pass
+
+    def __init__(self):
+        pass
+
+    
