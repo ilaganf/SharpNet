@@ -9,7 +9,6 @@ Possibly add later: data augmentation
 
 import tensorflow as tf
 from PIL import Image
-from matplotlib import pyplot as plt
 import numpy as np
 import scipy.stats as st
 import scipy
@@ -35,7 +34,9 @@ def input_op(filenames, params, is_training):
     dataset = dataset.map(lambda x: parse_image_fn(x))
     if is_training:
         # Shuffle all the input and repeat for unlimited epochs
-        dataset = dataset.shuffle(1000).repeat()
+        dataset = dataset.shuffle(10000).repeat()
+
+    dataset = dataset.map(lambda x: parse_image_fn(x))
     dataset = dataset.batch(params.batch_size).prefetch(1)
 
     iterator = dataset.make_initializable_iterator()

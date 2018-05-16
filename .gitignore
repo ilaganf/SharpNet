@@ -7,6 +7,9 @@ data/test2017/
 data/train2017/
 data/val2017/
 
+# Experiments
+experiments/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
