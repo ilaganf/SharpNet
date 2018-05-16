@@ -58,6 +58,6 @@ class EnhanceNet():
         return optimizer.minimize(self.loss, global_step=global_step, scope='model_prediction')
 
     def build_model():
-        self.prediction = add_prediction_op()
-        self.loss = add_loss_op()
-        self.optimizer = add_training_op()
+        self.prediction_op = add_prediction_op()
+        self.loss_op = add_loss_op()
+        self.train_op = add_training_op()
