@@ -1,11 +1,10 @@
 '''
 model.py
 
-Defines the model (to be passed to tf.estimator.Estimator)
-to train and make predictions
+Defines the model to train and make predictions
 
-Will mostly be using tensorflow functional API since that's
-what plays well with Estimator
+Will implement as a class that contains each of the 
+necessary operations 
 '''
 import tensorflow as tf
 
