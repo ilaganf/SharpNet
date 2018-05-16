@@ -29,6 +29,7 @@ class EnhanceNet():
         self.prediction_op = None
         self.loss_op = None
         self.optimizer_op = None
+        self.mse_op = None
 
     def add_prediction_op(self):
         with tf.variable.scope('model_prediction'):
@@ -57,6 +58,9 @@ class EnhanceNet():
     def add_ssim_op(self):
         return tf.image.ssim(self.prediction_op, self.labels, max_val=1.0)
 
+    def add_mse_op(self):
+        return tf.metrics.mean_squared_error(self.labels, self.prediction_op, name='mse_metric')
+
     def add_training_op(self):
         optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
         global_step = tf.train.get_or_create_global_step()
@@ -64,7 +68,8 @@ class EnhanceNet():
 
     def build_model():
         self.prediction_op = add_prediction_op()
-        self.loss_op = add_loss_op()
         self.psnr_op = add_psnr_op()
         self.ssim_op = add_ssim_op()
+        self.mse_op = add_mse_op()
+        self.loss_op = add_loss_op()
         self.train_op = add_training_op()
