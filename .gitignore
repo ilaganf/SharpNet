@@ -1,7 +1,11 @@
 .DS_Store
 *.jpg
 *.png
-data/
+
+# Data folders
+data/test2017/
+data/train2017/
+data/val2017/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
