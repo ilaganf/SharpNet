@@ -8,7 +8,14 @@ Possibly add later: data augmentation
 '''
 
 import tensorflow as tf
+from PIL import Image
+from matplotlib import pyplot as plt
+import numpy as np
+import scipy.stats as st
+import scipy
+import config
 
+test_image = "../data/test2017/000000000001.jpg"
 
 def input_op(filenames, params, is_training):
     '''
@@ -17,7 +24,7 @@ def input_op(filenames, params, is_training):
     Args:
         filenames: list of filenames (including path) of input images
         params: Config object that contains model hyperparameters
-        is_training: boolean of whether or not we're training
+        is_training: boolean of wheter 
     '''
     dataset = tf.data.Dataset.from_tensor_slices({'low-res': tf.constant(filenames),
                                                   'high-res': tf.constant(filenames)})
@@ -61,7 +68,35 @@ def low_res_fn(image, label):
     Applies gaussian blur, downscales image, then
     interpolates image back to original size
     '''
-    blurred = image # TODO
-    downscaled = tf.image.resize_images(blurred, [144, 144])
-    upscaled = tf.image.resize_images(downscaled, [288, 288], method=ResizeMethod.BICUBIC)
+
+    # Creating the gaussian kernel
+    # credit to antonilo in the github
+    # project TensBlur for this code snippet
+    def gauss_kernel(kernlen=3, nsig=1, channels=3):
+        interval = (2*nsig+1.)/(kernlen)
+        x = np.linspace(-nsig-interval/2., nsig+interval/2., kernlen+1)
+        kern1d = np.diff(st.norm.cdf(x))
+        kernel_raw = np.sqrt(np.outer(kern1d, kern1d))
+        kernel = kernel_raw/kernel_raw.sum()
+        out_filter = np.array(kernel, dtype = np.float32)
+        out_filter = out_filter.reshape((kernlen, kernlen, 1, 1))
+        out_filter = np.repeat(out_filter, channels, axis = 2)
+        return out_filter
+    
+    filter = tf.constant(gauss_kernel())
+    blurred = tf.nn.depthwise_conv2d(image, filter, strides=[1,1,1,1], padding="SAME", name="gaussian_blur")
+    downscaled = tf.image.resize_bicubic(blurred, config.downscale_size)
+    upscaled = tf.image.resize_bicubic(downscaled, [288, 288])
     return upscaled, label
+
+if __name__=="__main__":
+    file = scipy.ndimage.imread(test_image)
+    file = np.expand_dims(file, axis=0)
+    image_placeholder = tf.placeholder(dtype=tf.float32, shape=((1, 480, 640, 3)))
+    upscaled, label = low_res_fn(image_placeholder, None)
+    with tf.Session() as sess:
+        fd = {image_placeholder:file}
+        output = sess.run(upscaled, feed_dict=fd)
+    output = np.squeeze(output)
+    print(output.shape)
+    scipy.misc.imsave("my_img.jpg", output)
