@@ -23,7 +23,7 @@ class EnhanceNet():
 
             layer1_out = tf.contrib.layers.conv2d(inputs=self.input, num_outputs=n1, kernel_size = [f1, f1, num_channels], stride=1, padding='SAME', weights_initializer = tf.random_normal_initializer(0, 0.001), biases_initializer=tf.constant_initializer(0))
             layer2_out = tf.contrib.layers.conv2d(inputs=layer1_out, num_outputs=n2, kernel_size = [f1, f1, n1], stride=1, padding='SAME', weights_initializer = tf.random_normal_initializer(0, 0.001), biases_initializer=tf.constant_initializer(0))
-            final_out = tf.contrib.layers.conv2d(inputs=layer2_out, num_outputs=num_channel, kernel_size = [f1, f1, n2], stride=1, padding='SAME', weights_initializer = tf.random_normal_initializer(0, 0.001), biases_initializer=tf.constant_initializer(0), activation_fn=None)
+            final_out = tf.contrib.layers.conv2d(inputs=layer2_out, num_outputs=num_channels, kernel_size = [f1, f1, n2], stride=1, padding='SAME', weights_initializer = tf.random_normal_initializer(0, 0.001), biases_initializer=tf.constant_initializer(0), activation_fn=None)
             return final_out
 
     def add_loss_op(self, prediction_in):
@@ -32,7 +32,7 @@ class EnhanceNet():
             loss = tf.losses.mean_squared_error(
                 labels=self.labels,
                 predictions=prediction_in,
-                reduction=Reduction.MEAN
+                reduction=tf.losses.Reduction.MEAN
             )
             return loss
 
