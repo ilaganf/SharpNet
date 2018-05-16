@@ -72,7 +72,7 @@ def low_res_fn(image, label):
     # Creating the gaussian kernel
     # credit to antonilo in the github
     # project TensBlur for this code snippet
-    def gauss_kernel(kernlen=3, nsig=1, channels=3):
+    def gauss_kernel(kernlen=config.kernel_length, nsig=config.gassian_sig, channels=3):
         interval = (2*nsig+1.)/(kernlen)
         x = np.linspace(-nsig-interval/2., nsig+interval/2., kernlen+1)
         kern1d = np.diff(st.norm.cdf(x))

@@ -7,7 +7,9 @@ for holding hyperparameters for the model
 
 import json
 
-downscale_size=(144,144)
+downscale_size = (144,144)
+kernel_length  = 3
+gaussian_sig   = 1
 
 class Config():
 
