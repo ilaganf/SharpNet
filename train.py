@@ -37,6 +37,8 @@ def main():
                    if f.endswith('.jpg') or f.endswith('.png')]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
                    if f.endswith('.jpg') or f.endswith('.png')]
+    param.train_size = len(train_files)
+    param.dev_size = len(dev_files)
     train_data, train_initializer = input_op(train_files, param, is_training=True)
     dev_data, dev_initializer = input_op(train_files, param, is_training=False)
 
@@ -46,8 +48,7 @@ def main():
     dev_model = EnhanceNet(dev_data, dev_initializer, param, is_training=False)
     dev_model.build_model()
 
-    param.train_size = len(train_files)
-    param.dev_size = len(dev_files)
+
     train(train_model, dev_model, param)
 
 

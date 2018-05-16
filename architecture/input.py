@@ -31,14 +31,15 @@ def input_op(filenames, params, is_training):
     # Load all the images from the filenames,
     # Properly re-size them all, then create low-res
     # versions of all the input images to use as training input
-    
     if is_training:
         # Shuffle all the input and repeat for unlimited epochs
         dataset = dataset.shuffle(10000).repeat()
 
     dataset = dataset.map(lambda x: parse_image_fn(x))
-    dataset = dataset.batch(params.batch_size).prefetch(1)
-
+    if is_training:
+        dataset = dataset.batch(params.batch_size).prefetch(1)
+    else:
+        dataset = dataset.batch(params.eval_size)
     iterator = dataset.make_initializable_iterator()
     images = iterator.get_next()
     iterator_init = iterator.initializer
