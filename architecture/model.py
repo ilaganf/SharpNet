@@ -71,15 +71,16 @@ class EnhanceNet():
     def add_psnr_op(self):
         labels = tf.reshape(self.labels, (16, 288, 288, 3))
         pred = tf.reshape(self.prediction_op, (16, 288, 288, 3))
-        return tf.image.psnr(pred, labels, max_val=1.0, name='psnr_op')
+        psnr = tf.image.psnr(pred, labels, max_val=1.0, name='psnr_op')
+        return tf.reduce_mean(psnr)
 
     def add_ssim_op(self):
-        return tf.image.ssim(self.prediction_op, self.labels, max_val=1.0)
+        return tf.reduce_mean(tf.image.ssim(self.prediction_op, self.labels, max_val=1.0))
 
     def add_mse_op(self):
         mse, _ = tf.metrics.mean_squared_error(self.labels, self.prediction_op, 
                                                name='mse_metric')
-        return mse
+        return tf.reduce_mean(mse)
 
     def add_training_op(self):
         optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
@@ -100,8 +101,8 @@ class EnhanceNet():
         #tf.summary.scalar("Mean Squared Error", self.mse_op)
         
         with tf.variable_scope("metrics"):
-            #tf.summary.scalar("Peak Signal-to-Noise Ratio", self.psnr_op)
-            #tf.summary.scalar("Structural Similarity", self.ssim_op)
+            tf.summary.scalar("Peak Signal-to-Noise Ratio", self.psnr_op)
+            tf.summary.scalar("Structural Similarity", self.ssim_op)
             tf.summary.scalar("Loss", self.loss_op)
             weights = [var for var in tf.trainable_variables() if 'model_prediction' in str(var)]
             l2 = np.sum([tf.nn.l2_loss(var) for var in weights])

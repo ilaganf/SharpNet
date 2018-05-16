@@ -42,6 +42,7 @@ class Config():
         self.learning_rate = 0.01
         self.num_epochs = 5
         self.batch_size = 16
+        self.eval_size = 16
         self.write_params(self.basepath+'/params.json')
         self.train_size = None
         self.dev_size = None

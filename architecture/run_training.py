@@ -5,7 +5,7 @@ Creates a tensorflow session and actually
 runs the training loop
 '''
 import tensorflow as tf
-
+import numpy as np
 
 def train(train_model, dev_model, config):
     saver = tf.train.Saver(max_to_keep=1)
@@ -13,7 +13,7 @@ def train(train_model, dev_model, config):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         sess.run(train_model.iter_init_op)
-
+        
         train_writer = tf.summary.FileWriter('./summaries/train/')
         val_writer = tf.summary.FileWriter('./summaries/val/')
         # TODO: Tensorboard integration
@@ -24,26 +24,42 @@ def train(train_model, dev_model, config):
             num_steps = (config.train_size + config.batch_size - 1) // config.batch_size
 
             for t in range(num_steps):
-                prediction, loss = train_step(train_model, config, sess, train_writer)
+                prediction, loss, curr_step = train_step(train_model, config, sess, train_writer)
                 if t % 10 == 0:
                     print("Iteration {} loss: {}".format(t, loss))
 
             # saver.save(sess, config.checkpoints, global_step=epoch+1)
 
             if epoch % config.save_every == 0:
-                num_steps = (config.eval_size + config.batch_size - 1) // config.batch_size
+                num_steps = (config.dev_size + config.eval_size - 1) // config.eval_size
                 sess.run(dev_model.iter_init_op)
+                losses = []
+                psnrs = []
+                ssims = []
                 for _ in range(num_steps):
-                    summary = sess.run([dev_model.merged])
-                    val_writer.add_summary(summary)
-                if mse < best_dev:
-                    best_dev = mse
-                    saver.save(config.checkpoints)
-                print("Dev MSE: {}".format(best_dev))
+                    loss, psnr, ssim = sess.run([dev_model.loss_op, dev_model.psnr_op, dev_model.ssim_op])
+                    losses.append(loss)
+                    psnrs.append(psnr)
+                    ssims.append(ssim)
+                loss = np.mean(losses)
+                psnr = np.mean(psnrs)
+                ssim = np.mean(ssims)
+                with tf.variable_scope("metrics"):
+                    summary = tf.Summary()
+                    summary.value.add(tag="metrics/Peak_Signal-to-Noise_Ratio", simple_value=psnr)
+                    summary.value.add(tag="metrics/Structural_Similarity", simple_value=ssim)
+                    summary.value.add(tag="metrics/Loss", simple_value=loss)
+                    
+                val_writer.add_summary(summary, curr_step)
+                    
+                if loss < best_dev:
+                    best_dev = loss
+                    saver.save(sess, config.checkpoints)
+                    print("Dev Loss: {}".format(best_dev))
 
 
 def train_step(model, config, sess, train_writer):
     global_step = tf.train.get_global_step()
-    _, high_res, loss, summary, global_step = sess.run([model.train_op, model.prediction_op, model.loss_op, model.merged, global_step])
+    _, high_res, loss, summary, global_step= sess.run([model.train_op, model.prediction_op, model.loss_op, model.merged, global_step])
     train_writer.add_summary(summary, global_step)
-    return high_res, loss
+    return high_res, loss, global_step
