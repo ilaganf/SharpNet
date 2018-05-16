@@ -15,6 +15,7 @@ class EnhanceNet():
     Object that defines all the necessary operations
     so they can be readily accessed for training/testing
     '''
+
     def __init__(self, inputs, config, is_training=True):
 
         # Iterator over dataset object
@@ -23,7 +24,12 @@ class EnhanceNet():
 
         # Config object that holds hyperparameters
         self.config = config
-        
+
+        # Internal objects
+        self.prediction = None
+        self.loss = None
+        self.optimizer = None
+
     def add_prediction_op(self):
         with tf.variable.scope('model_prediction'):
             f1, f2, f3 = [9, 1, 5] # Size of filter kernels
@@ -40,13 +46,18 @@ class EnhanceNet():
         with tf.variable.scope('model_loss'):
             loss = tf.losses.mean_squared_error(
                 labels=self.labels,
-                predictions=prediction_in,
+                predictions=self.prediction,
                 reduction=tf.losses.Reduction.MEAN
             )
             return loss
 
 
-    def add_training_op(self, loss):
+    def add_training_op(self):
         optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
         global_step = tf.train.get_or_create_global_step()
-        return optimizer.minimize(loss, global_step=global_step, scope='model_prediction')
+        return optimizer.minimize(self.loss, global_step=global_step, scope='model_prediction')
+
+    def build_model():
+        self.prediction_op = add_prediction_op()
+        self.loss_op = add_loss_op()
+        self.train_op = add_training_op()
