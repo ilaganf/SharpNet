@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import scipy.stats as st
 import scipy
-import architecture.config as config
+import config as config
 
 test_image = "../data/test2017/000000000001.jpg"
 
@@ -89,17 +89,20 @@ def low_res_fn(image):
     
     filter = tf.constant(gauss_kernel())
     image = tf.expand_dims(image, axis=0)
-    blurred = tf.nn.conv2d(image, filter, strides=[1,1,1,1], padding="SAME", name="gaussian_blur")
+    print(filter, image)
+    blurred = tf.nn.depthwise_conv2d(image, filter, strides=[1,1,1,1], padding="SAME", name="gaussian_blur")
+    print(blurred)
     downscaled = tf.image.resize_images(blurred, config.downscale_size, method=tf.image.ResizeMethod.BICUBIC)
+    print(downscaled)
     upscaled = tf.image.resize_images(downscaled, [288, 288], method=tf.image.ResizeMethod.BICUBIC)
-    upscaled = tf.squeeze(upscaled)
+    upscaled = tf.squeeze(upscaled, axis=0)
+    print(upscaled)
     return upscaled
 
 if __name__=="__main__":
     file = scipy.ndimage.imread(test_image)
-    file = np.expand_dims(file, axis=0)
-    image_placeholder = tf.placeholder(dtype=tf.float32, shape=((1, 480, 640, 3)))
-    upscaled, label = low_res_fn(image_placeholder, None)
+    image_placeholder = tf.placeholder(dtype=tf.float32, shape=((480, 640, 3)))
+    upscaled = low_res_fn(image_placeholder)
     with tf.Session() as sess:
         fd = {image_placeholder:file}
         output = sess.run(upscaled, feed_dict=fd)

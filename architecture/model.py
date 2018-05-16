@@ -38,22 +38,23 @@ class EnhanceNet():
             f1, f2, f3 = [9, 1, 5] # Size of filter kernels
             n1, n2 = [64, 32] #Number of filters in layer
             num_channels = 3
-
+            
             layer1_out = tf.layers.conv2d(inputs=self.inputs, filters=n1, 
                                           kernel_size=f1, strides=1, padding='SAME', 
-                                          weights_initializer=tf.random_normal_initializer(0, 0.001),
-                                          biases_initializer=tf.constant_initializer(0),
+                                          kernel_initializer=tf.random_normal_initializer(0, 0.001),
+                                          bias_initializer=tf.constant_initializer(0),
                                           name='conv1')
+            
             layer2_out = tf.layers.conv2d(inputs=layer1_out, filters=n2, 
                                           kernel_size=f2, strides=1, padding='SAME', 
-                                          weights_initializer=tf.random_normal_initializer(0, 0.001), 
-                                          biases_initializer=tf.constant_initializer(0),
+                                          kernel_initializer=tf.random_normal_initializer(0, 0.001), 
+                                          bias_initializer=tf.constant_initializer(0),
                                           name='conv2')
-            final_out = tf.layers.conv2d(inputs=layer2_out, num_outputs=num_channels, 
+            final_out = tf.layers.conv2d(inputs=layer2_out, filters=num_channels, 
                                          kernel_size=f3, strides=1, padding='SAME', 
-                                         weights_initializer=tf.random_normal_initializer(0, 0.001), 
-                                         biases_initializer=tf.constant_initializer(0), 
-                                         activation_fn=None, name='output')
+                                         kernel_initializer=tf.random_normal_initializer(0, 0.001), 
+                                         bias_initializer=tf.constant_initializer(0), 
+                                         activation=None, name='output')
             return final_out
 
     def add_loss_op(self):
