@@ -31,11 +31,12 @@ def input_op(filenames, params, is_training):
         dataset = dataset.shuffle(len(filenames)).repeat()
     dataset = dataset.batch(params.batch_size).prefetch(1)
 
-    iterator = datset.make_initializable_iterator()
+    iterator = dataset.make_initializable_iterator()
     images = iterator.get_next()
     iterator_init = iterator.initializer
 
     return images, iterator_init
+    # return dataset.make_one_shot_iterator().get_next()
 
 
 def parse_image_fn(fname1, fname2):
