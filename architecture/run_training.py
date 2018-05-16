@@ -18,20 +18,25 @@ def train(train_model, dev_model, config):
 
         best_dev = float('inf')
         for epoch in range(train_model.config.num_epochs):
+            print("Epoch {}\n".format(epoch+1))
             num_steps = (config.train_size + config.batch_size - 1) // config.batch_size
 
             for t in range(num_steps):
                 prediction, loss = train_step(train_model, config, sess)
                 if t % 10 == 0:
                     print("Iteration {} loss: {}".format(t, loss))
-        saver.save(sess, config.checkpoints, global_step=epoch+1)
 
-        if epoch % config.save_every == 0:
-            num_steps = (config.eval_size + config.batch_size - 1) // config.batch_size
+            # saver.save(sess, config.checkpoints, global_step=epoch+1)
 
-            for t in range(num_steps):
-
-
+            if epoch % config.save_every == 0:
+                num_steps = (config.eval_size + config.batch_size - 1) // config.batch_size
+                sess.run(dev_model.iter_init_op)
+                for _ in range(num_steps):
+                    mse = sess.run(dev_model.mse_op)
+                if mse < best_dev:
+                    best_dev = mse
+                    saver.save(config.checkpoints)
+                print("Dev MSE: {}".format(best_dev))
 
 
 def train_step(model, config):
@@ -39,3 +44,4 @@ def train_step(model, config):
     _, high_res, loss, global_step_val = sess.run([model.train_op, model.prediction_op,
                                                    model.loss_op, global_step])
     return high_res, loss
+

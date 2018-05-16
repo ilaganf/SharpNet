@@ -33,14 +33,27 @@ class EnhanceNet():
         self.mse_op = None
 
     def add_prediction_op(self):
-        with tf.variable.scope('model_prediction'):
+        with tf.variable.scope('model_prediction', reuse=(not self.is_training)):
             f1, f2, f3 = [9, 1, 5] # Size of filter kernels
             n1, n2 = [64, 32] #Number of filters in layer
             num_channels = 3
 
-            layer1_out = tf.contrib.layers.conv2d(inputs=self.input, num_outputs=n1, kernel_size = [f1, f1, num_channels], stride=1, padding='SAME', weights_initializer = tf.random_normal_initializer(0, 0.001), biases_initializer=tf.constant_initializer(0))
-            layer2_out = tf.contrib.layers.conv2d(inputs=layer1_out, num_outputs=n2, kernel_size = [f1, f1, n1], stride=1, padding='SAME', weights_initializer = tf.random_normal_initializer(0, 0.001), biases_initializer=tf.constant_initializer(0))
-            final_out = tf.contrib.layers.conv2d(inputs=layer2_out, num_outputs=num_channels, kernel_size = [f1, f1, n2], stride=1, padding='SAME', weights_initializer = tf.random_normal_initializer(0, 0.001), biases_initializer=tf.constant_initializer(0), activation_fn=None)
+            layer1_out = tf.contrib.layers.conv2d(inputs=self.input, num_outputs=n1, 
+                                                  kernel_size=[f1, f1, num_channels], 
+                                                  stride=1, padding='SAME', 
+                                                  weights_initializer=tf.random_normal_initializer(0, 0.001),
+                                                  biases_initializer=tf.constant_initializer(0))
+            layer2_out = tf.contrib.layers.conv2d(inputs=layer1_out, num_outputs=n2, 
+                                                  kernel_size=[f1, f1, n1], 
+                                                  stride=1, padding='SAME', 
+                                                  weights_initializer=tf.random_normal_initializer(0, 0.001), 
+                                                  biases_initializer=tf.constant_initializer(0))
+            final_out = tf.contrib.layers.conv2d(inputs=layer2_out, num_outputs=num_channels, 
+                                                 kernel_size=[f1, f1, n2], 
+                                                 stride=1, padding='SAME', 
+                                                 weights_initializer=tf.random_normal_initializer(0, 0.001), 
+                                                 biases_initializer=tf.constant_initializer(0), 
+                                                 activation_fn=None)
             return final_out
 
     def add_loss_op(self):
@@ -60,7 +73,9 @@ class EnhanceNet():
         return tf.image.ssim(self.prediction_op, self.labels, max_val=1.0)
 
     def add_mse_op(self):
-        return tf.metrics.mean_squared_error(self.labels, self.prediction_op, name='mse_metric')
+        mse, _ = tf.metrics.mean_squared_error(self.labels, self.prediction_op, 
+                                               name='mse_metric')
+        return mse
 
     def add_training_op(self):
         optimizer = tf.train.AdamOptimizer(self.config.learning_rate)

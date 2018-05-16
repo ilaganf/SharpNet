@@ -17,7 +17,7 @@ class Config():
             os.mkdir(self.basepath)
             os.mkdir(self.checkpoints)
         self.write_params(self.basepath+'params.json')
-
+        self.save_every = 10
 
     def load_params(self, filename):
         with open(filename) as f:
