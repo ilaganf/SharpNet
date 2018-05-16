@@ -14,4 +14,4 @@ def train(train_model, dev_model):
 
         # TODO: Tensorboard integration
         for epoch in range(train_model.config.num_epochs):
-            pass
+            num_steps = (train_size + params.batch_size - 1) // params.batch_size
