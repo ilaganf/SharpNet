@@ -46,7 +46,7 @@ echo "Creating Target folder"
 cat > /tmp/md5sum.txt << EOF
 68baf1a0733e26f5878a1450feeebc20  ${TARGET_PATH}/train2017.zip
 a3d79f5ed8d289b7a7554ce06a5782b3  ${TARGET_PATH}/val2017.zip
-a3d79f5ed8d289b7a7554ce06a5782b3  ${TARGET_PATH}/val2017.zip
+a3d79f5ed8d289b7a7554ce06a5782b3  ${TARGET_PATH}/test2017.zip
 EOF
 
 cd ${TARGET_PATH}
@@ -55,9 +55,9 @@ DONE=-1
 until [ ${DONE} -eq 0 ]; do
 
 	echo "Downloading files"
-	wget -qc http://msvocds.blob.core.windows.net/coco2014/train2017.zip &
-	wget -qc http://msvocds.blob.core.windows.net/coco2014/val2017.zip &
-  wget -qc http://msvocds.blob.core.windows.net/coco2014/test2017.zip
+	wget -qc images.cocodataset.org/zips/train2017.zip &
+	wget -qc images.cocodataset.org/zips/val2017.zip &
+  wget -qc images.cocodataset.org/zips/test2017.zip
 	echo "Now waiting for all threads to end"
 	wait
 	echo "Done waiting for threads. Computing MD5SUM"
