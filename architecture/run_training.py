@@ -39,9 +39,8 @@ def train(train_model, dev_model, config):
                 print("Dev MSE: {}".format(best_dev))
 
 
-def train_step(model, config):
+def train_step(model, config, sess):
     global_step = tf.train.get_global_step()
     _, high_res, loss, global_step_val = sess.run([model.train_op, model.prediction_op,
                                                    model.loss_op, global_step])
     return high_res, loss
-

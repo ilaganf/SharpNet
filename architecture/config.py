@@ -7,6 +7,20 @@ for holding hyperparameters for the model
 import os
 import json
 
+#################
+# Data location #
+#################
+
+TRAIN_DIR = './data/train2017/'
+DEV_DIR = './data/val2017/'
+
+######
+# Training constants
+#
+
+######################
+# Blurring constants #
+######################
 downscale_size = (144,144)
 kernel_length  = 3
 gaussian_sig   = 1
@@ -27,7 +41,8 @@ class Config():
         self.learning_rate = 0.01
         self.num_epochs = 5
         self.batch_size = 2
-        
+        self.train_size = None
+        self.dev_size = None
 
     def load_params(self, filename):
         with open(filename) as f:

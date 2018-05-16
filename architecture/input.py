@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import scipy.stats as st
 import scipy
-import config
+import architecture.config as config
 
 test_image = "../data/test2017/000000000001.jpg"
 
@@ -32,7 +32,8 @@ def input_op(filenames, params, is_training):
     # Load all the images from the filenames,
     # Properly re-size them all, then create low-res
     # versions of all the input images to use as training input
-    dataset = dataset.map(parse_image_fn).map(low_res_fn)
+    print(dataset)
+    dataset = dataset.map(lambda x: parse_image_fn(x))
     if is_training:
         # Shuffle all the input and repeat for unlimited epochs
         dataset = dataset.shuffle(len(filenames)).repeat()
@@ -40,29 +41,32 @@ def input_op(filenames, params, is_training):
 
     iterator = dataset.make_initializable_iterator()
     images = iterator.get_next()
+    print(images)
     iterator_init = iterator.initializer
 
     return images, iterator_init
 
 
-def parse_image_fn(fname1, fname2):
+def parse_image_fn(fnames):
     '''
     Loads images from filenames
     '''
-    img1 = _parse_helper(fname1)
-    img2 = _parse_helper(fname2)
-    return img1, img2
+    n_low_res, n_high_res = fnames['low-res'], fnames['high-res']
+    low_res = _parse_helper(n_low_res)
+    low_res = low_res_fn(low_res)
+    high_res = _parse_helper(n_high_res)
+    return {"low-res":low_res, "high-res":high_res}
 
 
 def _parse_helper(fname):
     image_string = tf.read_file(fname)
-    decoded = tf.image.decode_image(image_string, channels=3)
+    decoded = tf.image.decode_jpeg(image_string, channels=3)
     image = tf.image.convert_image_dtype(decoded, tf.float32)
     resized = tf.image.resize_images(image, [288,288])
     return resized
 
 
-def low_res_fn(image, label):
+def low_res_fn(image):
     '''
     Applies gaussian blur, downscales image, then
     interpolates image back to original size
@@ -71,7 +75,7 @@ def low_res_fn(image, label):
     # Creating the gaussian kernel
     # credit to antonilo in the github
     # project TensBlur for this code snippet
-    def gauss_kernel(kernlen=config.kernel_length, nsig=config.gassian_sig, channels=3):
+    def gauss_kernel(kernlen=config.kernel_length, nsig=config.gaussian_sig, channels=3):
         interval = (2*nsig+1.)/(kernlen)
         x = np.linspace(-nsig-interval/2., nsig+interval/2., kernlen+1)
         kern1d = np.diff(st.norm.cdf(x))
@@ -83,10 +87,12 @@ def low_res_fn(image, label):
         return out_filter
     
     filter = tf.constant(gauss_kernel())
-    blurred = tf.nn.depthwise_conv2d(image, filter, strides=[1,1,1,1], padding="SAME", name="gaussian_blur")
-    downscaled = tf.image.resize_bicubic(blurred, config.downscale_size)
-    upscaled = tf.image.resize_bicubic(downscaled, [288, 288])
-    return upscaled, label
+    image = tf.expand_dims(image, axis=0)
+    blurred = tf.nn.conv2d(image, filter, strides=[1,1,1,1], padding="SAME", name="gaussian_blur")
+    downscaled = tf.image.resize_images(blurred, config.downscale_size, method=tf.image.ResizeMethod.BICUBIC)
+    upscaled = tf.image.resize_images(downscaled, [288, 288], method=tf.image.ResizeMethod.BICUBIC)
+    upscaled = tf.squeeze(upscaled)
+    return upscaled
 
 if __name__=="__main__":
     file = scipy.ndimage.imread(test_image)
