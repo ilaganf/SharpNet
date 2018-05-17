@@ -39,7 +39,7 @@ def input_op(filenames, params, is_training):
     if is_training:
         dataset = dataset.batch(params.batch_size).prefetch(1)
     else:
-        dataset = dataset.batch(params.eval_size)
+        dataset = dataset.batch(params.batch_size)
     iterator = dataset.make_initializable_iterator()
     images = iterator.get_next()
     iterator_init = iterator.initializer

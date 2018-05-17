@@ -35,7 +35,7 @@ class Config():
         if not os.path.exists(self.basepath):
             os.mkdir(self.basepath)
             os.mkdir(self.checkpoints)
-
+            
             # temp - until we build file architecture, need these params
             for key, val in kwargs.items():
                 self.__dict__[key] = val
@@ -48,7 +48,7 @@ class Config():
             self.train_size = None
             self.dev_size = None 
         else:
-            self.load_params(self.basepath+'/params.json') 
+            self.load_params(self.basepath+'/params.json')
 
     def load_params(self, filename):
         with open(filename) as f:

@@ -33,6 +33,7 @@ class EnhanceNet():
         self.mse_op = None
         self.is_training = is_training
         
+        
     def add_prediction_op(self):
         with tf.variable_scope('model_prediction', reuse=tf.AUTO_REUSE):
             f1, f2, f3 = [9, 1, 5] # Size of filter kernels
@@ -44,7 +45,6 @@ class EnhanceNet():
                                           kernel_initializer=tf.random_normal_initializer(0, 0.001),
                                           bias_initializer=tf.constant_initializer(0),
                                           name='conv1')
-            
             layer2_out = tf.layers.conv2d(inputs=layer1_out, filters=n2, 
                                           kernel_size=f2, strides=1, padding='SAME', 
                                           kernel_initializer=tf.random_normal_initializer(0, 0.001), 
@@ -57,6 +57,7 @@ class EnhanceNet():
                                          activation=None, name='output')
             return final_out
 
+
     def add_loss_op(self):
         # self.labels has y vals
         with tf.variable_scope('model_loss', reuse=tf.AUTO_REUSE):
@@ -67,24 +68,29 @@ class EnhanceNet():
             )
             return loss
 
+
     def add_psnr_op(self):
         labels = tf.reshape(self.labels, (16, 288, 288, 3))
         pred = tf.reshape(self.prediction_op, (16, 288, 288, 3))
         psnr = tf.image.psnr(pred, labels, max_val=1.0, name='psnr_op')
         return tf.reduce_mean(psnr)
 
+
     def add_ssim_op(self):
         return tf.reduce_mean(tf.image.ssim(self.prediction_op, self.labels, max_val=1.0))
+
 
     def add_mse_op(self):
         mse, _ = tf.metrics.mean_squared_error(self.labels, self.prediction_op, 
                                                name='mse_metric')
         return tf.reduce_mean(mse)
 
+
     def add_training_op(self):
         optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
         global_step = tf.train.get_or_create_global_step()
         return optimizer.minimize(self.loss_op, global_step=global_step)
+
 
     def build_model(self):
         self.prediction_op = self.add_prediction_op()
@@ -96,8 +102,8 @@ class EnhanceNet():
             self.train_op = self.add_training_op()
         self.variable_summaries()
 
+
     def variable_summaries(self):
-        #tf.summary.scalar("Mean Squared Error", self.mse_op)
         
         with tf.variable_scope("metrics"):
             tf.summary.scalar("Peak Signal-to-Noise Ratio", self.psnr_op)
