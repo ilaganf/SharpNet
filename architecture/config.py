@@ -35,7 +35,7 @@ class Config():
         if not os.path.exists(self.basepath):
             os.mkdir(self.basepath)
             os.mkdir(self.checkpoints)
-            
+
             # temp - until we build file architecture, need these params
             for key, val in kwargs.items():
                 self.__dict__[key] = val
@@ -46,7 +46,8 @@ class Config():
             self.eval_size = 16
             self.write_params(self.basepath+'/params.json')
             self.train_size = None
-            self.dev_size = None 
+            self.dev_size = None
+            self.test_size = None
         else:
             self.load_params(self.basepath+'/params.json')
 
