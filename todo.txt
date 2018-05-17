@@ -18,7 +18,7 @@ Reconstruction Network
 
 
 TODO (mark items with **[COMPLETE]** when done):
-    - get data (MS-COCO or the like)
+**[COMPLETE]**- get data (MS-COCO or the like)
         * may want to instead write script to download data (so as to 
           not anger github and make it easier to work on the cloud)
 **[COMPLETE]** - format data pipeline (tf.data.Dataset object?) (https://www.tensorflow.org/
@@ -36,7 +36,7 @@ TODO (mark items with **[COMPLETE]** when done):
         * perceptual loss obviously
         * include pixel loss?
         * numerical approximations of other image structure losses (e.g. SSIM)?
-    - implement training loop
+**[partially COMPLETE]** - implement training loop
         * may want to use tf.Estimator object (https://www.tensorflow.org/versions/
           r1.4/api_docs/python/tf/estimator/Estimator)
         * on each training image, need to do a few main things:
@@ -49,8 +49,8 @@ TODO (mark items with **[COMPLETE]** when done):
                output images) to calculate loss
             5. Keep loss network weights constant, backprop into weights of 
                reconstruction layer
-        * create infrastructure for easily modifying hyperparameters
-        * create infrastructure for easily saving and restoring weights
+**[COMPLETE]** * create infrastructure for easily modifying hyperparameters
+**[COMPLETE]** * create infrastructure for easily saving and restoring weights
     - implement evaluation and testing
         * basically just calculate loss using above steps on the validation/testing set
     - implement prediction

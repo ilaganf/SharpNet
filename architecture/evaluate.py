@@ -9,27 +9,27 @@ import os
 import tensorflow as tf
 import scipy
 import numpy as np
-import architecture.config as config
-from architecture.input import input_op
-from architecture.model import EnhanceNet
+from input import input_op
 
-def evaluate(param, test_files, evaluate_model):
-    test_data, test_initializer = input_op(test_files, param, is_training=False)
+
+def evaluate(model, params):
     saver = tf.train.Saver()
 
     with tf.Session() as sess:
-        sess.run(evaluate_model.iter_init_op)
-        saver.restore(sess, param.checkpoints)
+        sess.run(model.iter_init_op)
+        saver.restore(sess, params.checkpoints)
 
-        num_runs = params.test_size / params.eval_size
+        num_runs = (params.train_size + params.batch_size - 1) // params.batch_size
         total_loss = 0.0
         total_ssim = 0.0
         total_psnr = 0.0
         for i in range(num_runs)
-            ground_truth, input, pred = sess.run([evaluate_model.labels, evaluate_model.inputs, evaluate_model.prediction_op])
-            total_loss += evaluate_model.add_loss_op()
-            total_ssim += evaluate_model.add_ssim_op()
-            total_psnr += evaluate_model.add_psnr_op()
+            mse, ssim, psnr, pred = sess.run([model.loss_op, model.ssim_op, 
+                                              model.psnr_op, model.prediction_op])
+            total_loss += mse
+            total_ssim += ssim
+            total_psnr += psnr
+
         return total_loss/num_runs, total_ssim/num_runs, total_psnr/num_runs
 
 
@@ -41,6 +41,7 @@ def main():
                   if f.endswith('.jpg') or f.endswith('.png')]
 
     loss, ssim, psnr = evaluate(param, test_files)
+
 
 if __name__=="__main__":
     main()
