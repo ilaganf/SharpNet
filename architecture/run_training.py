@@ -7,6 +7,7 @@ runs the training loop
 import tensorflow as tf
 import numpy as np
 
+
 def train(train_model, dev_model, config):
     saver = tf.train.Saver(max_to_keep=1)
 
@@ -64,6 +65,8 @@ def eval_epoch(model, config, sess, val_writer):
 
 def train_step(model, config, sess, train_writer):
     global_step = tf.train.get_global_step()
-    _, high_res, loss, summary, global_step= sess.run([model.train_op, model.prediction_op, model.loss_op, model.merged, global_step])
+    _, high_res, loss, summary, global_step = sess.run([model.train_op, model.prediction_op, 
+                                                        model.loss_op, model.merged, 
+                                                        global_step])
     train_writer.add_summary(summary, global_step)
     return high_res, loss, global_step

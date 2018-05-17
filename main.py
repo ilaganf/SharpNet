@@ -21,6 +21,7 @@ import tensorflow as tf
 import architecture
 import architecture.config as config
 from architecture.run_training import train
+from architecture.evaluate import evaluate
 from architecture.input import input_op
 from architecture.model import EnhanceNet
 
@@ -45,8 +46,14 @@ def do_prediction():
     pass
 
 
-def do_evaluation():
-    pass
+def do_evaluation(params):
+    test_files = [os.path.join(config.TEST_DIR, f) for f in os.listdir(config.TEST_DIR)
+                  if f.endswith('.jpg')]
+    test_data, test_initializer = input_op(test_files, params, is_training=False)
+
+    test_model = EnhanceNet(test_data, test_initializer, params, is_training=False)
+
+    avg_loss, avg_ssim, avg_psnr = evaluate(test_model, params) # TODO: return some sample images
 
 
 def do_training(params):
@@ -70,7 +77,7 @@ def do_training(params):
 
 
 def main(unused_argv):
-    print(EXPERIMENTS_DIR)
+
     # Print an error message if you've entered flags incorrectly
     if len(unused_argv) != 1:
         raise Exception("There is a problem with the entered flags: %s" % unused_argv)
