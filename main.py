@@ -26,7 +26,7 @@ from architecture.model import EnhanceNet
 
 
 # Credit to 224N course staff for CLI code
-MAIN_DIR = os.path.relpath(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # relative path of the main directory
+MAIN_DIR = os.path.relpath(os.path.dirname(os.path.abspath(__file__))) # relative path of the main directory
 EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of experiments dir
 
 tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval / predict")
@@ -70,6 +70,7 @@ def do_training(params):
 
 
 def main(unused_argv):
+    print(EXPERIMENTS_DIR)
     # Print an error message if you've entered flags incorrectly
     if len(unused_argv) != 1:
         raise Exception("There is a problem with the entered flags: %s" % unused_argv)
@@ -90,6 +91,8 @@ def main(unused_argv):
 
     # Different behavior based on mode
     if FLAGS.mode == 'train':
+        if not os.path.exists(train_dir):
+            os.mkdir(train_dir)
         params = config.Config(is_new=True, path=train_dir, **config_dict)
         do_training(params)
     elif FLAGS.mode == 'eval':
