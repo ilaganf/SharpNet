@@ -30,7 +30,9 @@ EXPERIMENTS_DIR = os.path.join(MAIN_DIR, "experiments") # relative path of exper
 tf.app.flags.DEFINE_string("mode", "train", "Available modes: train / eval / predict")
 tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experiment. This will create a directory by this name in the experiments/ directory, which will hold all data related to this experiment")
 tf.app.flags.DEFINE_integer("num_epochs", 0, "Number of epochs to train.")
-tf.app.flags.DEFINE_string("ckpt_load_dir", "", "For eval and predict modes, which directory to load the checkpoint from.")
+# tf.app.flags.DEFINE_string("ckpt_load_dir", "", "For eval and predict modes, which directory to load the checkpoint from.")
+
+tf.app.flags.DEFINE_string()
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -57,7 +59,7 @@ def do_training():
     param.dev_size = len(dev_files)
 
     train_data, train_initializer = input_op(train_files, param, is_training=True)
-    dev_data, dev_initializer = input_op(train_files, param, is_training=False)
+    dev_data, dev_initializer = input_op(dev_files, param, is_training=False)
 
     train_model = EnhanceNet(train_data, train_initializer, param, is_training=True)
     dev_model = EnhanceNet(dev_data, dev_initializer, param, is_training=False)
@@ -73,13 +75,16 @@ def main(unused_argv):
     # Define train_dir
     if not FLAGS.experiment_name and FLAGS.mode != "eval" and FLAGS.mode != "predict":
         raise Exception("You need to specify --experiment_name")
-    FLAGS.train_dir = FLAGS.train_dir or os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
+    train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
 
-    # Initialize bestmodel directory
-    bestmodel_dir = os.path.join(FLAGS.train_dir, "best_checkpoint")
+    # Load FLAGS into dict to save as a Config object later
+    config_dict = {'experiment_name':FLAGS.experiment_name,
+                   'save_every':FLAGS.save_every, 'num_epochs':FLAGS.num_epochs,
+                   'learning_rate':FLAGS.learning_rate, 'batch_size':FLAGS.batch_size}
 
     # Different behavior based on mode
     if FLAGS.mode == 'train':
+        params = config.Config(True, train_dir, **config_dict)
         do_training()
     elif FLAGS.mode == 'eval':
         pass
