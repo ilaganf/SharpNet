@@ -13,6 +13,7 @@ import json
 
 TRAIN_DIR = './data/train2017/'
 DEV_DIR = './data/val2017/'
+TEST_DIR = './data/test2017/'
 
 ######
 # Training constants
@@ -39,13 +40,11 @@ class Config():
             self.learning_rate = kwargs.get('learning_rate', 0.01)
             self.num_epochs = kwargs.get('num_epochs', 5)
             self.batch_size = kwargs.get('batch_size', 16)
-            for key, val in kwargs.items():
-                self.__dict__[key] = val
             self.write_params(self.basepath+'/params.json')
         else:
             fname = os.path.join(path, 'params.json')
             self.load_params(fname)
-
+            
         self.train_size = None
         self.dev_size = None
 
