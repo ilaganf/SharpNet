@@ -21,7 +21,6 @@ class EnhanceNet():
         # Iterator over dataset object
         self.inputs = inputs['low-res']
         self.labels = inputs['high-res']
-        print(self.labels)
         self.iter_init_op = inputs_initializer
         
         # Config object that holds hyperparameters
@@ -36,7 +35,7 @@ class EnhanceNet():
         
         
     def add_prediction_op(self):
-        with tf.variable_scope('model_prediction', reuse=(not self.is_training)):
+        with tf.variable_scope('model_prediction', reuse=tf.AUTO_REUSE):
             f1, f2, f3 = [9, 1, 5] # Size of filter kernels
             n1, n2 = [64, 32] #Number of filters in layer
             num_channels = 3
@@ -61,7 +60,7 @@ class EnhanceNet():
 
     def add_loss_op(self):
         # self.labels has y vals
-        with tf.variable_scope('model_loss', reuse=not self.is_training):
+        with tf.variable_scope('model_loss', reuse=tf.AUTO_REUSE):
             loss = tf.losses.mean_squared_error(
                 labels=self.labels,
                 predictions=self.prediction_op,

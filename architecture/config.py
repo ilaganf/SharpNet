@@ -13,6 +13,7 @@ import json
 
 TRAIN_DIR = './data/train2017/'
 DEV_DIR = './data/val2017/'
+TEST_DIR = './data/test2017/'
 
 ######
 # Training constants
@@ -34,18 +35,20 @@ class Config():
         if not os.path.exists(self.basepath):
             os.mkdir(self.basepath)
             os.mkdir(self.checkpoints)
-
-        self.save_every = 1
-        self.learning_rate = 0.01
-        self.num_epochs = 5
-        self.batch_size = 16
-        # temp - until we build file architecture, need these params
-        for key, val in kwargs.items():
-            self.__dict__[key] = val
-        self.write_params(self.basepath+'/params.json')
-        self.train_size = None
-        self.dev_size = None
-
+            
+            # temp - until we build file architecture, need these params
+            for key, val in kwargs.items():
+                self.__dict__[key] = val
+            self.save_every = 1
+            self.learning_rate = 0.01
+            self.num_epochs = 5
+            self.batch_size = 16
+            self.eval_size = 16
+            self.write_params(self.basepath+'/params.json')
+            self.train_size = None
+            self.dev_size = None 
+        else:
+            self.load_params(self.basepath+'/params.json')
 
     def load_params(self, filename):
         with open(filename) as f:
