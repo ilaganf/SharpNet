@@ -8,7 +8,6 @@ necessary operations
 '''
 import tensorflow as tf
 import numpy as np
-import architecture.config
 
 class EnhanceNet():
     '''
@@ -113,3 +112,10 @@ class EnhanceNet():
             l2 = np.sum([tf.nn.l2_loss(var) for var in weights])
             tf.summary.scalar("L2 norm", l2)
             self.merged = tf.summary.merge_all()
+
+
+class VAKNet(EnhanceNet):
+
+    def foo():
+        # The full bells and whistles model
+        pass
