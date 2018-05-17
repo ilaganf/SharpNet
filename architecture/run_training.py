@@ -16,7 +16,6 @@ def train(train_model, dev_model, config):
         
         train_writer = tf.summary.FileWriter('./summaries/train/')
         val_writer = tf.summary.FileWriter('./summaries/val/')
-        # TODO: Tensorboard integration
 
         best_dev = float('inf')
         for epoch in range(train_model.config.num_epochs):
@@ -28,34 +27,39 @@ def train(train_model, dev_model, config):
                 if t % 10 == 0:
                     print("Iteration {} loss: {}".format(t, loss))
 
-            # saver.save(sess, config.checkpoints, global_step=epoch+1)
 
             if epoch % config.save_every == 0:
-                num_steps = (config.dev_size + config.eval_size - 1) // config.eval_size
-                sess.run(dev_model.iter_init_op)
-                losses = []
-                psnrs = []
-                ssims = []
-                for _ in range(num_steps):
-                    loss, psnr, ssim = sess.run([dev_model.loss_op, dev_model.psnr_op, dev_model.ssim_op])
-                    losses.append(loss)
-                    psnrs.append(psnr)
-                    ssims.append(ssim)
-                loss = np.mean(losses)
-                psnr = np.mean(psnrs)
-                ssim = np.mean(ssims)
-                with tf.variable_scope("metrics"):
-                    summary = tf.Summary()
-                    summary.value.add(tag="metrics/Peak_Signal-to-Noise_Ratio", simple_value=psnr)
-                    summary.value.add(tag="metrics/Structural_Similarity", simple_value=ssim)
-                    summary.value.add(tag="metrics/Loss", simple_value=loss)
-                    
-                val_writer.add_summary(summary, curr_step)
+                loss = eval_epoch(dev_model, config, sess, val_writer)
                     
                 if loss < best_dev:
                     best_dev = loss
                     saver.save(sess, config.checkpoints)
-                    print("Dev Loss: {}".format(best_dev))
+                print("Dev Loss: {}".format(best_dev))
+
+
+def eval_epoch(model, config, sess, val_writer):
+
+    num_steps = (config.dev_size + config.batch_size - 1) // config.batch_size
+    sess.run(model.iter_init_op)
+    losses = []
+    psnrs = []
+    ssims = []
+    for _ in range(num_steps):
+        loss, psnr, ssim = sess.run([model.loss_op, model.psnr_op, model.ssim_op])
+        losses.append(loss)
+        psnrs.append(psnr)
+        ssims.append(ssim)
+    loss = np.mean(losses)
+    psnr = np.mean(psnrs)
+    ssim = np.mean(ssims)
+    with tf.variable_scope("metrics"):
+        summary = tf.Summary()
+        summary.value.add(tag="metrics/Peak_Signal-to-Noise_Ratio", simple_value=psnr)
+        summary.value.add(tag="metrics/Structural_Similarity", simple_value=ssim)
+        summary.value.add(tag="metrics/Loss", simple_value=loss)
+        
+    val_writer.add_summary(summary, curr_step)
+    return loss
 
 
 def train_step(model, config, sess, train_writer):
