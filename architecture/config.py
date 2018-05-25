@@ -15,9 +15,10 @@ TRAIN_DIR = './data/train2017/'
 DEV_DIR = './data/val2017/'
 TEST_DIR = './data/test2017/'
 
-######
-# Training constants
-#
+######################
+# Training constants #
+######################
+input_size = (288, 288)
 
 ######################
 # Blurring constants #
@@ -40,14 +41,12 @@ class Config():
             self.learning_rate = kwargs.get('learning_rate', 0.01)
             self.num_epochs = kwargs.get('num_epochs', 5)
             self.batch_size = kwargs.get('batch_size', 16)
+            self.num_shuffle_buffer = kwargs.get('shuffle_buffer_size', 10000)
             self.write_params(self.basepath+'/params.json')
+            self.tensorboard_dir = self.basepath+'/tensorboard/'
         else:
             fname = os.path.join(path, 'params.json')
             self.load_params(fname)
-            
-        self.train_size = None
-        self.dev_size = None
-
 
 
     def load_params(self, filename):
