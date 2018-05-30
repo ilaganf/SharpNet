@@ -27,6 +27,9 @@ downscale_size = (144,144)
 kernel_length  = 3
 gaussian_sig   = 1
 
+HOME = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+EXP_DIR = os.path.join(HOME, 'experiments')
+
 class Config():
 
     def __init__(self, is_new, path, **kwargs):
@@ -34,16 +37,17 @@ class Config():
             self.experiment_name = kwargs.get('experiment_name', 'default')
             self.basepath = path
             self.checkpoints = self.basepath+'/weights/'
-            if not os.path.exists(self.basepath):
-                os.mkdir(self.basepath)
+            if not os.path.exists(self.checkpoints):
                 os.mkdir(self.checkpoints)
             self.save_every = kwargs.get('save_every', 1)
             self.learning_rate = kwargs.get('learning_rate', 0.01)
             self.num_epochs = kwargs.get('num_epochs', 5)
             self.batch_size = kwargs.get('batch_size', 16)
             self.num_shuffle_buffer = kwargs.get('shuffle_buffer_size', 10000)
+            self.tensorboard_dir = os.path.join(self.basepath, 'tensorboard/')
+            if not os.path.exists(self.tensorboard_dir):
+                os.mkdir(self.tensorboard_dir)
             self.write_params(self.basepath+'/params.json')
-            self.tensorboard_dir = self.basepath+'/tensorboard/'
         else:
             fname = os.path.join(path, 'params.json')
             self.load_params(fname)
