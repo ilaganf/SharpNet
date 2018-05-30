@@ -67,14 +67,14 @@ class Model():
         You need to set self.input_data to point to the correct
         input data before calling this function.
         '''
-        raise NotImplementedError("Do not substantiate a base Model class")
+        raise NotImplementedError("Do not instantiate a base Model class")
 
     
     def add_loss_op(self, pred):
         '''
         Adds the loss function to the graph
         '''
-        raise NotImplementedError("Do not substantiate a base Model class")
+        raise NotImplementedError("Do not inbstantiate a base Model class")
 
     
     def add_train_op(self, loss):
@@ -82,7 +82,7 @@ class Model():
         Adds the training operations (optimizer and gradient
         clipping operations for instance) to the graph
         '''
-        raise NotImplementedError("Do not substantiate a base Model class")
+        raise NotImplementedError("Do not inbstantiate a base Model class")
 
       
     def fit(self, train_data, val_data):
@@ -119,8 +119,8 @@ class Model():
                 if val_loss < best_loss:
                     best_loss = val_loss
                     if self.verbose:
-                        print("New best MSE! Saving model in ./results/model.weights/weights")
-                    saver.save(sess, "./results/trained_variables.ckpt")
+                        print("New best MSE! Saving model in {}".format(self.config.checkpoints))
+                    saver.save(sess, self.config.checkpoints)
                 if self.verbose: print()
 
                 

@@ -18,7 +18,7 @@ TEST_DIR = './data/test2017/'
 ######################
 # Training constants #
 ######################
-input_size = (288, 288)
+INPUT_SIZE = (288, 288)
 
 ######################
 # Blurring constants #
@@ -44,6 +44,7 @@ class Config():
             self.num_epochs = kwargs.get('num_epochs', 5)
             self.batch_size = kwargs.get('batch_size', 16)
             self.num_shuffle_buffer = kwargs.get('shuffle_buffer_size', 10000)
+            self.input_size = kwargs.get('input_size', INPUT_SIZE)
             self.tensorboard_dir = os.path.join(self.basepath, 'tensorboard/')
             if not os.path.exists(self.tensorboard_dir):
                 os.mkdir(self.tensorboard_dir)

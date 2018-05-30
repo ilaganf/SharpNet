@@ -62,7 +62,7 @@ def _parse_helper(fname):
     image_string = tf.read_file(fname)
     decoded = tf.image.decode_jpeg(image_string, channels=3)
     image = tf.image.convert_image_dtype(decoded, tf.float32)
-    resized = tf.image.resize_images(image, [288,288])
+    resized = tf.image.resize_images(image, config.INPUT_SIZE)
     return resized
 
 

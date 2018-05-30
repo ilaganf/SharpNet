@@ -63,7 +63,7 @@ class VAKNet(EnhanceNet):
 
 
     def _resnet_activation(self, reconstructed):
-        assert config.input_size == (299, 299), \
+        assert config.INPUT_SIZE == (299, 299), \
             "If using Inception Resnet, need 299x299 input images"
 
         with slim.arg_scope(inception_resnet_v2_arg_scope()):
@@ -111,8 +111,8 @@ class VAKNet(EnhanceNet):
                 if val_loss < best_loss:
                     best_loss = val_loss
                     if self.verbose:
-                        print("New best MSE! Saving model in ./results/model.weights/weights")
-                    saver.save(sess, "./results/trained_variables.ckpt")
+                        print("New best MSE! Saving model in {}".format(self.config.checkpoints))
+                    saver.save(sess, self.config.checkpoints)
                 if self.verbose: print()
 
         

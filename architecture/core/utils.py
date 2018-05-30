@@ -11,7 +11,7 @@ import scipy.stats as st
 import architecture
 import scipy
 import architecture.config as config
-#import architecture.config as config
+
 
 def read_image(fname):
     '''
