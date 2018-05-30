@@ -18,7 +18,7 @@ TEST_DIR = './data/test2017/'
 ######################
 # Training constants #
 ######################
-INPUT_SIZE = (288, 288)
+INPUT_SIZE = (299, 299)
 
 ######################
 # Blurring constants #

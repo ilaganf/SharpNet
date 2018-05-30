@@ -25,7 +25,7 @@ import architecture.config as config
 #from architecture.evaluate import evaluate
 #from architecture.input import input_op
 from architecture.EnhanceNet import EnhanceNet
-
+from architecture.VAKNet import VAKNet
 
 # Credit to 224N course staff for CLI code
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.abspath(__file__))) # relative path of the main directory
@@ -65,7 +65,7 @@ def do_training(params):
                    if f.endswith('.jpg')]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
                    if f.endswith('.jpg')]
-    model = EnhanceNet(params)
+    model = VAKNet(params)
     model.fit(train_files, dev_files)
 
 

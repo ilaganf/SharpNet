@@ -21,7 +21,7 @@ def read_image(fname):
     image_string = tf.read_file(fname)
     decoded = tf.image.decode_jpeg(image_string, channels=3)
     image = tf.image.convert_image_dtype(decoded, tf.float32)
-    resized = tf.image.resize_images(image, config.input_size)
+    resized = tf.image.resize_images(image, config.INPUT_SIZE)
     return resized
 
 
@@ -52,7 +52,7 @@ def distort_image(image):
     image = tf.expand_dims(image, axis=0)
     blurred = tf.nn.depthwise_conv2d(image, filter, strides=[1,1,1,1], padding="SAME", name="gaussian_blur")
     downscaled = tf.image.resize_images(blurred, config.downscale_size, method=tf.image.ResizeMethod.BICUBIC)
-    upscaled = tf.image.resize_images(downscaled, config.input_size, method=tf.image.ResizeMethod.BICUBIC)
+    upscaled = tf.image.resize_images(downscaled, config.INPUT_SIZE, method=tf.image.ResizeMethod.BICUBIC)
     upscaled = tf.squeeze(upscaled, axis=0)
     return upscaled
 

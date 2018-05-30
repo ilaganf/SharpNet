@@ -1,0 +1,1 @@
+{"experiment_name": "VAKNet_baseline", "basepath": "./experiments/VAKNet_baseline", "checkpoints": "./experiments/VAKNet_baseline/weights/", "save_every": 1, "learning_rate": 0.01, "num_epochs": 5, "batch_size": 16, "shuffle_buffer_size": 10000, "input_size": [299, 299], "tensorboard_dir": "./experiments/VAKNet_baseline/tensorboard/"}
