@@ -7,7 +7,8 @@ data/train2017/
 data/val2017/
 
 # Experiments
-
+architecture/inception_resnet_v2_2016_08_30.ckpt
+architecture/inception_resnet_v2_2016_08_30.tar.gz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
