@@ -5,11 +5,12 @@ import os
 
 import tensorflow as tf
 
-from inception_resnet_v2 import inception_resnet_v2_base, inception_resnet_v2_arg_scope
+from architecture.inception_resnet_v2 import inception_resnet_v2_base, inception_resnet_v2_arg_scope
 import config
+from architecture.core.Model import Model
 
 
-class VAKNet(EnhanceNet):
+class VAKNet(Model):
 
     def add_prediction_op(self):
         with tf.variable_scope('model_prediction', reuse=tf.AUTO_REUSE):
