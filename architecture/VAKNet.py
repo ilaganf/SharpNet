@@ -25,7 +25,7 @@ class VAKNet(Model):
         self.pred = self.add_prediction_op()
         self.loss = self.add_loss_op(self.pred)
         
-        self.global_step = tf.Variable(0, trainable=False, name="global_step")
+        self.global_step = tf.get_variable(name="global_step", shape=(), dtype=tf.int64, initializer=tf.zeros_initializer(dtype=tf.int64), trainable=False)
         self.is_training = tf.placeholder(tf.bool)
         
         
@@ -59,7 +59,7 @@ class VAKNet(Model):
         '''
         Adds the loss function to the graph
         '''
-        with tf.variable_scope('', reuse=tf.AUTO_REUSE):
+        with tf.variable_scope('loss', reuse=tf.AUTO_REUSE):
             _, end_points = self._resnet_activation(pred)
             pred_activation = end_points['Mixed_6a']
             
@@ -100,10 +100,18 @@ class VAKNet(Model):
         '''
         train_iter_init, val_iter_init, self.input_data = self._prepare_train_val(train_data, val_data)
         self.build()
-        #saver = tf.train.Saver(max_to_keep=1)
+        saver = tf.train.Saver(max_to_keep=1)
         train_len = len(train_data)
         val_len = len(val_data)
-        resnet_saver = tf.train.Saver()
+        
+        #checkpoint_path = "architecture/inception_resnet_v2_2016_08_30.ckpt"
+        #reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path)
+        #var_to_shape_map = reader.get_variable_to_shape_map()
+        #tensors = []
+        #for key in var_to_shape_map:
+        #    tensors.append(reader.get_tensor(key))
+        #print(tensors)
+        #resnet_saver = tf.train.Saver(var_list=tensors, filename='architecture/inception_resnet_v2_2016_08_30.ckpt')
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             # Restore weights for inception_resnet v2
@@ -113,14 +121,13 @@ class VAKNet(Model):
             #reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path)
             #var_to_shape_map = reader.get_variable_to_shape_map()
             #for key in var_to_shape_map:
-                
-            resnet_saver.restore(sess, 'architecture/inception_resnet_v2_2016_08_30.ckpt')
+            optimistic_restore(sess, 'architecture/inception_resnet_v2_2016_08_30.ckpt', graph=sess.graph)
+            #resnet_saver.restore(sess, 'architecture/inception_resnet_v2_2016_08_30.ckpt')
             
-            train_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/train/')
-            val_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/val/')
+            train_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/train/', graph=sess.graph)
+            val_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/val/', graph=sess.graph)
 
             
-
             training_handle = sess.run(train_iter_init.string_handle())
             val_handle = sess.run(val_iter_init.string_handle())
             
@@ -144,3 +151,56 @@ class VAKNet(Model):
                 if self.verbose: print()
 
         
+def inception_arg_scope(weight_decay=0.00004,
+                        use_batch_norm=True,
+                        batch_norm_decay=0.9997,
+                        batch_norm_epsilon=0.001):
+  """Defines the default arg scope for inception models.
+  Args:
+    weight_decay: The weight decay to use for regularizing the model.
+    use_batch_norm: "If `True`, batch_norm is applied after each convolution.
+    batch_norm_decay: Decay for batch norm moving average.
+    batch_norm_epsilon: Small float added to variance to avoid dividing by zero
+      in batch norm.
+  Returns:
+    An `arg_scope` to use for the inception models.
+  """
+  batch_norm_params = {
+      # Decay for the moving averages.
+      'decay': batch_norm_decay,
+      # epsilon to prevent 0s in variance.
+      'epsilon': batch_norm_epsilon,
+      # collection containing update_ops.
+      'updates_collections': tf.GraphKeys.UPDATE_OPS,
+  }
+  if use_batch_norm:
+    normalizer_fn = tf.contrib.slim.batch_norm
+    normalizer_params = batch_norm_params
+  else:
+    normalizer_fn = None
+    normalizer_params = {}
+  # Set weight_decay for weights in Conv and FC layers.
+  with tf.contrib.slim.arg_scope([tf.contrib.slim.conv2d, tf.contrib.slim.fully_connected],
+                      weights_regularizer=tf.contrib.slim.l2_regularizer(weight_decay)):
+    with tf.contrib.slim.arg_scope(
+        [tf.contrib.slim.conv2d],
+        weights_initializer=tf.contrib.slim.variance_scaling_initializer(),
+        activation_fn=tf.nn.relu,
+        normalizer_fn=normalizer_fn,
+        normalizer_params=normalizer_params) as sc:
+      return sc
+
+
+def optimistic_restore(session, save_file, graph=tf.get_default_graph()):
+    reader = tf.train.NewCheckpointReader(save_file)
+    saved_shapes = reader.get_variable_to_shape_map()
+    var_names = sorted([(var.name, var.name.split(':')[0]) for var in tf.global_variables()
+            if var.name.split(':')[0] in saved_shapes])    
+    restore_vars = []    
+    for var_name, saved_var_name in var_names:            
+        curr_var = graph.get_tensor_by_name(var_name)
+        var_shape = curr_var.get_shape().as_list()
+        if var_shape == saved_shapes[saved_var_name]:
+            restore_vars.append(curr_var)
+    opt_saver = tf.train.Saver(restore_vars)
+    opt_saver.restore(session, save_file)
