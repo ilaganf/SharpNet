@@ -13,6 +13,7 @@ model checkpoints to ./experiments/
 # Standard Library imports go here
 import os
 import json
+import shutil
 
 # Package imports go here
 import tensorflow as tf
@@ -91,8 +92,9 @@ def main(unused_argv):
 
     # Different behavior based on mode
     if FLAGS.mode == 'train':
-        if not os.path.exists(train_dir):
-            os.mkdir(train_dir)
+        if os.path.exists(train_dir):
+            shutil.rmtree(train_dir)
+        os.mkdir(train_dir)
         params = config.Config(is_new=True, path=train_dir, **config_dict)
         do_training(params)
     elif FLAGS.mode == 'eval':

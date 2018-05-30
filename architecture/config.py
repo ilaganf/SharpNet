@@ -11,8 +11,8 @@ import json
 # Data location #
 #################
 
-TRAIN_DIR = './data/train2017/'
-DEV_DIR = './data/val2017/'
+TRAIN_DIR = './data/train_debug/'
+DEV_DIR = './data/val_debug/'
 TEST_DIR = './data/test2017/'
 
 ######################
@@ -41,7 +41,7 @@ class Config():
             self.learning_rate = kwargs.get('learning_rate', 0.01)
             self.num_epochs = kwargs.get('num_epochs', 5)
             self.batch_size = kwargs.get('batch_size', 16)
-            self.num_shuffle_buffer = kwargs.get('shuffle_buffer_size', 10000)
+            self.shuffle_buffer_size = kwargs.get('shuffle_buffer_size', 10000)
             self.write_params(self.basepath+'/params.json')
             self.tensorboard_dir = self.basepath+'/tensorboard/'
         else:
