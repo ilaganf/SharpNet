@@ -65,7 +65,8 @@ def do_training(params):
                    if f.endswith('.jpg')]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
                    if f.endswith('.jpg')]
-    model = VAKNet(params)
+    # model = VAKNet(params)
+    model = EnhanceNet(params)
     model.fit(train_files, dev_files)
 
 
