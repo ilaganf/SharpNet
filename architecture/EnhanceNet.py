@@ -48,8 +48,8 @@ class EnhanceNet(Model):
 
     def add_training_op(self, loss):
         optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
-        global_step = tf.train.get_or_create_global_step()
-        return optimizer.minimize(loss, global_step=global_step)
+        self.global_step = tf.train.get_or_create_global_step()
+        return optimizer.minimize(loss, global_step=self.global_step)
 
 
 class VAKNet(EnhanceNet):

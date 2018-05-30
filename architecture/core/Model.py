@@ -11,17 +11,18 @@ class Model():
     
     def get_ops(self):
         pred = self.pred
-        labels = self.input_data['high-res']
-        # SSIM
-        ssim_op = tf.reduce_mean(tf.image.ssim(pred, 
+        with tf.variable_scope("metrics", reuse=tf.AUTO_REUSE):
+            labels = self.input_data['high-res']
+            # SSIM
+            ssim_op = tf.reduce_mean(tf.image.ssim(pred, 
                                                labels, max_val=1.0))
-        # PSNR
-        _labels = tf.reshape(labels, (self.config.batch_size, 288, 288, 3))
-        _pred = tf.reshape(pred, (self.config.batch_size, 288, 288, 3))
-        psnr_op = tf.reduce_mean(tf.image.psnr(_pred, _labels, max_val=1.0, name='psnr_op'))
+            # PSNR
+            _labels = tf.reshape(labels, (self.config.batch_size, 288, 288, 3))
+            _pred = tf.reshape(pred, (self.config.batch_size, 288, 288, 3))
+            psnr_op = tf.reduce_mean(tf.image.psnr(_pred, _labels, max_val=1.0, name='psnr_op'))
     
-        # MSE
-        mse_op = tf.reduce_mean(tf.losses.mean_squared_error(pred, labels))
+            # MSE
+            mse_op = tf.reduce_mean(tf.losses.mean_squared_error(pred, labels))
         return [ssim_op, psnr_op, mse_op]
 
     
@@ -30,7 +31,7 @@ class Model():
         Adds important graph functions as well as the global 
         step which is important for logging training progress
         '''
-        self.global_step = tf.Variable(0, trainable=False)
+        self.global_step = tf.Variable(0, trainable=False, name="global_step")
         self.is_training = tf.placeholder(tf.bool)
         self.pred = self.add_prediction_op()
         self.loss = self.add_loss_op(self.pred)
@@ -38,7 +39,7 @@ class Model():
         self.ops = self.get_ops()
    
         
-    def input_op(self, data):
+    def input_op(self, data, epoch_type):
         '''
         Creates the dataset object to be run and used for training/evaluating
         
@@ -47,17 +48,17 @@ class Model():
         params: Config object that contains model hyperparameters
         is_training: boolean of wheter 
         '''
-        dataset = tf.data.Dataset.from_tensor_slices({'low-res': tf.constant(data),
-                                                  'high-res': tf.constant(data)})
-        
-        # Load all the images from the filenames,
-        # Properly re-size them all, then create low-res
-        # versions of all the input images to use as training input
-        dataset = dataset.shuffle(len(data)).repeat()
+        with tf.variable_scope('input', reuse=tf.AUTO_REUSE):
+            dataset = tf.data.Dataset.from_tensor_slices({'low-res': tf.constant(data),
+                                                          'high-res': tf.constant(data)})
 
-        dataset = dataset.map(lambda x: utils.parse_image_fn(x))
-        dataset = dataset.shuffle(self.config.num_shuffle_buffer).repeat().prefetch(1)
-        dataset = dataset.batch(self.config.batch_size)
+            # Load all the images from the filenames,
+            # Properly re-size them all, then create low-res
+            # versions of all the input images to use as training input
+            dataset = dataset.map(lambda x: utils.parse_image_fn(x))
+            if epoch_type == "train":
+                dataset = dataset.shuffle(self.config.shuffle_buffer_size).prefetch(1)
+            dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.config.batch_size))
         return dataset
         
     
@@ -98,8 +99,8 @@ class Model():
         val_len = len(val_data)
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
-            train_writer = tf.summary.FileWriter(self.config.tensorboard_dir + self.config.experiment_name + '/train/')
-            val_writer = tf.summary.FileWriter(self.config.tensorboard_dir + self.config.experiment_name + '/val/')
+            train_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/train/', graph=sess.graph)
+            val_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/val/')
 
             training_handle = sess.run(train_iter_init.string_handle())
             val_handle = sess.run(val_iter_init.string_handle())
@@ -129,11 +130,11 @@ class Model():
         @data is a pandas dataframe
         '''
         saver = tf.train.Saver(max_to_keep = 1)
-        input = self.input_op(data)
+        input = self.input_op(data, "val")
         iterator = input.make_initializable_iterator()
         self.input_data = iterator.get_next()
         with tf.Session() as sess:
-            saver.restore(sess, './results/trained_variables.ckpt')
+            saver.restore(sess, self.config.checkpoints)
             sess.run(tf.global_variables_initializer())
             test_handle = sess.run(iterator.string_handle())
             sess.run(iterator.initializer)
@@ -149,7 +150,7 @@ class Model():
 
     
     def _prepare_train_val(self, train_data, dev_data):
-        train_input, val_input = self.input_op(train_data), self.input_op(dev_data)
+        train_input, val_input = self.input_op(train_data, "train"), self.input_op(dev_data, "val")
         train_iter_init = train_input.make_initializable_iterator()
         val_iter_init = val_input.make_initializable_iterator()
         self.handle = tf.placeholder(tf.string, shape=())
@@ -167,35 +168,40 @@ class Model():
         while True:
             try:
                 output = sess.run(ops, feed_dict={self.handle: handle, self.is_training: epoch_type == "train"})
-                metrics.append(output[0:len(ops) - (epoch_type=="train") - 1])
+                metrics.append(output[0:len(ops) - (epoch_type=="train")])
             except tf.errors.OutOfRangeError:
                 break
             metric = (("Loss", output[0]), 
-                                 ("Squared Error", output[6]), 
-                                 ("PSNR", output[4]), 
-                                 ("SSIM", output[5]))
+                      ("Squared Error", output[6]), 
+                      ("PSNR", output[4]), 
+                      ("SSIM", output[5]))
+            global_step = output[3]
             bar.add(self.config.batch_size, values=metric)
-        summary, important_metrics = self.make_summary(metrics, epoch_type)
-        writer.add_summary(summary, global_step)
+            if epoch_type == "train":
+                metrics = metrics[-1]
+                summary, important_metrics = self.make_summary([metrics], epoch_type)
+                writer.add_summary(summary, global_step)
+        if epoch_type == "val":
+            summary, important_metrics = self.make_summary(metrics, epoch_type)
+            writer.add_summary(summary, global_step)
         return important_metrics
 
     
     def make_summary(self, metrics, epoch_type):
         loss = np.mean([x[0] for x in metrics])
-        pred = np.concatenate([x[1] for x in metrics])
-        labels = np.concatenate([x[2]['high-res'] for x in metrics])
-        psnr = np.concatenate([x[4] for x in metrics])
-        ssim = np.concatenate([x[5] for x in metrics])
-        mse = np.concatenate([x[6] for x in metrics])
-        summary = tf.Summary(value=[tf.Summary.Value(tag='Loss', simple_value=loss),
-                                    tf.Summary.Value(tag="Squared Error", simple_value=mse),
-                                    tf.Summary.Value(tag='Peak Signal-to-Noise Ratio', simple_value=psnr),
-                                    tf.Summary.Value(tag='Structural Similarity', simple_value=ssim)]) 
+        pred = np.mean([x[1] for x in metrics])
+        labels = np.mean([x[2]['high-res'] for x in metrics])
+        psnr = np.mean([[x[4]] for x in metrics])
+        ssim = np.mean([[x[5]] for x in metrics])
+        mse = np.mean([[x[6]] for x in metrics])
+        summary = tf.Summary(value=[tf.Summary.Value(tag='metrics/Loss', simple_value=loss),
+                                    tf.Summary.Value(tag="metrics/Squared Error", simple_value=mse),
+                                    tf.Summary.Value(tag='metrics/Peak Signal-to-Noise Ratio', simple_value=psnr),
+                                    tf.Summary.Value(tag='metrics/Structural Similarity', simple_value=ssim)]) 
         important_metrics = (("Loss", loss), ("Squared Error", mse), ("PSNR", psnr), ("SSIM", ssim))
         return summary, important_metrics
    
-    
-        
+            
     def weight_l2(self):
         weights = [var for var in tf.trainable_variables() if 'weights' in str(var)]
         l2 = np.sum([tf.nn.l2_loss(var) for var in weights])
