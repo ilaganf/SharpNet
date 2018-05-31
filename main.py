@@ -39,6 +39,7 @@ tf.app.flags.DEFINE_float("learning_rate", .01, "Learning rate of the model")
 tf.app.flags.DEFINE_integer("batch_size", 16, "Batch size to use")
 tf.app.flags.DEFINE_integer("shuffle_buffer_size", 10000, "Size of shuffle buffer")
 tf.app.flags.DEFINE_string("load_params", "", "Directory from which to load params, if they've already been made")
+tf.app.flags.DEFINE_float("max_grad_norm", 10.0, "Max norm at which to clip gradients. 0 turns off gradient clipping")
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -89,7 +90,8 @@ def main(unused_argv):
         config_dict = {'experiment_name':FLAGS.experiment_name,
                        'save_every':FLAGS.save_every, 'num_epochs':FLAGS.num_epochs,
                        'learning_rate':FLAGS.learning_rate, 'batch_size':FLAGS.batch_size,
-                       'shuffle_buffer_size':FLAGS.shuffle_buffer_size}
+                       'shuffle_buffer_size':FLAGS.shuffle_buffer_size,
+                       'max_grad_norm':FLAGS.max_grad_norm}
 
     # Different behavior based on mode
     if FLAGS.mode == 'train':

@@ -80,7 +80,19 @@ class VAKNet(Model):
         with tf.variable_scope("training", reuse=tf.AUTO_REUSE):
             optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
             self.global_step = tf.train.get_or_create_global_step()
-        return optimizer.minimize(loss, global_step=self.global_step)
+            grads_and_vars = optimizer.compute_gradients(loss)
+            trainable_grads_and_vars = [g_v for g_v in grads_and_vars \
+                                        if "Inception" not in g_v[1].name]
+            train_grads = [g[0] for g in trainable_grads_and_vars]
+            train_vars = [v[1] for v in trainable_grads_and_vars]
+            if self.config.max_grad_norm != 0:
+                train_grads, _ = tf.clip_by_global_norm(grads, self.config.max_grad_norm)
+            self.grad_norm = tf.global_norm(train_grads)
+            train_op = optimizer.apply_gradients(zip(train_grads, train_vars))
+
+            assert self.grad_norm is not None, "Grad norms were set incorrectly"
+            
+        return train_op
 
 
     def _resnet_activation(self, reconstructed):
