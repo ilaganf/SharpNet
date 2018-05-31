@@ -102,8 +102,8 @@ class Model():
             train_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/train/', graph=sess.graph)
             val_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/val/')
             if load:
-                print("Restoring weights from {}".format(self.config.checkpoints))
-                saver.restore(sess, self.config.checkpoints+'checkpoint')
+                print("Restoring weights from {}".format(self.config.checkpoint_dir))
+                saver.restore(sess, self.config.checkpoints)
 
             training_handle = sess.run(train_iter_init.string_handle())
             val_handle = sess.run(val_iter_init.string_handle())
@@ -123,8 +123,8 @@ class Model():
                 if val_loss < best_loss:
                     best_loss = val_loss
                     if self.verbose:
-                        print("New best MSE! Saving model in {}".format(self.config.checkpoints))
-                    saver.save(sess, self.config.checkpoints+'checkpoint')
+                        print("New best MSE! Saving model in {}".format(self.config.checkpoint_dir))
+                    saver.save(sess, self.config.checkpoints)
                 if self.verbose: print()
 
                 

@@ -39,9 +39,10 @@ class Config():
             # Naming and filesystem parameters
             self.experiment_name = kwargs.get('experiment_name', 'default')
             self.basepath = path
-            self.checkpoints = self.basepath+'/weights/'
-            if not os.path.exists(self.checkpoints):
-                os.mkdir(self.checkpoints)
+            self.checkpoint_dir = self.basepath+'/weights/'
+            self.checkpoints = os.path.join(self.checkpoint_dir, 'weights.ckpt')
+            if not os.path.exists(self.checkpoint_dir):
+                os.mkdir(self.checkpoint_dir)
             self.tensorboard_dir = os.path.join(self.basepath, 'tensorboard/')
             if not os.path.exists(self.tensorboard_dir):
                 os.mkdir(self.tensorboard_dir)

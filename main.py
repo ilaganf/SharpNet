@@ -85,6 +85,9 @@ def main(unused_argv):
 
     if FLAGS.load_params:
         params = config.Config(is_new=False, path=FLAGS.load_params)
+        if os.path.exists(train_dir) and not FLAGS.warm_start:
+            shutil.rmtree(params.tensorboard_dir)
+            os.mkdir(os.path.join(params.basepath, 'tensorboard/'))
     else:
         # Load FLAGS into dict to save as a Config object later
         config_dict = {'experiment_name':FLAGS.experiment_name,
