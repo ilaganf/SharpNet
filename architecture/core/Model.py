@@ -86,7 +86,7 @@ class Model():
         raise NotImplementedError("Do not inbstantiate a base Model class")
 
       
-    def fit(self, train_data, val_data):
+    def fit(self, train_data, val_data, load=False):
         '''
         Runs training/validation loop
 
@@ -101,6 +101,9 @@ class Model():
             sess.run(tf.global_variables_initializer())
             train_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/train/', graph=sess.graph)
             val_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/val/')
+            if load:
+                print("Restoring weights from {}".format(self.config.checkpoints))
+                saver.restore(sess, self.config.checkpoints+'checkpoint')
 
             training_handle = sess.run(train_iter_init.string_handle())
             val_handle = sess.run(val_iter_init.string_handle())

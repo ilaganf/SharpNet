@@ -40,7 +40,7 @@ tf.app.flags.DEFINE_integer("batch_size", 16, "Batch size to use")
 tf.app.flags.DEFINE_integer("shuffle_buffer_size", 10000, "Size of shuffle buffer")
 tf.app.flags.DEFINE_string("load_params", "", "Directory from which to load params, if they've already been made. If set, causes other parameters besides experiment name to be ignored.")
 tf.app.flags.DEFINE_float("max_grad_norm", 10.0, "Max norm at which to clip gradients. 0 turns off gradient clipping")
-
+tf.app.flags.DEFINE_bool("warm_start", False, "Whether or not to load existing weights. Only valid if load_params exists")
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -59,7 +59,7 @@ def do_evaluation(params):
     avg_loss, avg_ssim, avg_psnr = evaluate(test_model, params) # TODO: return some sample images
 
 
-def do_training(params):
+def do_training(params, load_weights=False):
     # Make experiments reproducible
     tf.set_random_seed(12345)
 
@@ -69,7 +69,7 @@ def do_training(params):
                    if f.endswith('.jpg')]
     model = VAKNet(params)
     # model = EnhanceNet(params)
-    model.fit(train_files, dev_files)
+    model.fit(train_files, dev_files, load_weights)
 
 
 def main(unused_argv):
@@ -84,8 +84,7 @@ def main(unused_argv):
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
 
     if FLAGS.load_params:
-        with open(FLAGS.load_params, 'r') as file:
-            config_dict = json.load(file)
+        params = config.Config(is_new=False, path=FLAGS.load_params)
     else:
         # Load FLAGS into dict to save as a Config object later
         config_dict = {'experiment_name':FLAGS.experiment_name,
@@ -93,14 +92,13 @@ def main(unused_argv):
                        'learning_rate':FLAGS.learning_rate, 'batch_size':FLAGS.batch_size,
                        'shuffle_buffer_size':FLAGS.shuffle_buffer_size,
                        'max_grad_norm':FLAGS.max_grad_norm}
+        if os.path.exists(train_dir):
+            shutil.rmtree(os.path.join(train_dir, 'tensorboard'))
+        params = config.Config(is_new=True, path=train_dir, **config_dict)
 
     # Different behavior based on mode
     if FLAGS.mode == 'train':
-        if os.path.exists(train_dir):
-            shutil.rmtree(train_dir)
-        os.mkdir(train_dir)
-        params = config.Config(is_new=(FLAGS.load_params==''), path=train_dir, **config_dict)
-        do_training(params)
+        do_training(params, FLAGS.warm_start)
     elif FLAGS.mode == 'eval':
         pass
     elif FLAGS.mode == 'predict':
