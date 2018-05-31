@@ -1,5 +1,9 @@
 todo.txt
 
+IMMEDIATE TODOS (remove when finished):
+Split dataset (make quick bash script to split the train, val and test splits into tiny versions of themselves) (branch split)
+Freeze vaknet variables (branch freeze)
+
 Overall Architecture - follwing Justin's paper
     - input: blurred, downscaled, then interpolated 
              to original size image
