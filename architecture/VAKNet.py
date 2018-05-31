@@ -16,11 +16,6 @@ class VAKNet(Model):
         Adds important graph functions as well as the global 
         step which is important for logging training progress
         '''
-        #self.graph = tf.import_graph_def('inception_resnet_v2_graph.pb')
-        #self.sess = tf.Session()
-        
-        
-
 
         self.pred = self.add_prediction_op()
         self.loss = self.add_loss_op(self.pred)
