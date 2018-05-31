@@ -121,7 +121,7 @@ class Model():
                     best_loss = val_loss
                     if self.verbose:
                         print("New best MSE! Saving model in {}".format(self.config.checkpoints))
-                    saver.save(sess, self.config.checkpoints)
+                    saver.save(sess, self.config.checkpoints+'checkpoint')
                 if self.verbose: print()
 
                 
@@ -134,7 +134,7 @@ class Model():
         iterator = input.make_initializable_iterator()
         self.input_data = iterator.get_next()
         with tf.Session() as sess:
-            saver.restore(sess, self.config.checkpoints)
+            saver.restore(sess, self.config.checkpoints+'checkpoint')
             sess.run(tf.global_variables_initializer())
             test_handle = sess.run(iterator.string_handle())
             sess.run(iterator.initializer)

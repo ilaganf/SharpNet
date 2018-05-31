@@ -41,6 +41,7 @@ tf.app.flags.DEFINE_integer("shuffle_buffer_size", 10000, "Size of shuffle buffe
 tf.app.flags.DEFINE_string("load_params", "", "Directory from which to load params, if they've already been made. If set, causes other parameters besides experiment name to be ignored.")
 tf.app.flags.DEFINE_float("max_grad_norm", 10.0, "Max norm at which to clip gradients. 0 turns off gradient clipping")
 
+
 FLAGS = tf.app.flags.FLAGS
 
 
@@ -98,7 +99,7 @@ def main(unused_argv):
         if os.path.exists(train_dir):
             shutil.rmtree(train_dir)
         os.mkdir(train_dir)
-        params = config.Config(is_new=True, path=train_dir, **config_dict)
+        params = config.Config(is_new=(FLAGS.load_params==''), path=train_dir, **config_dict)
         do_training(params)
     elif FLAGS.mode == 'eval':
         pass

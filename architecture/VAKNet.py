@@ -159,7 +159,7 @@ class VAKNet(Model):
                     best_loss = val_loss
                     if self.verbose:
                         print("New best MSE! Saving model in {}".format(self.config.checkpoints))
-                    saver.save(sess, self.config.checkpoints)
+                    saver.save(sess, self.config.checkpoints+'checkpoint')
                 if self.verbose: print()
 
         
