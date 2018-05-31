@@ -86,7 +86,7 @@ class Model():
         raise NotImplementedError("Do not inbstantiate a base Model class")
 
       
-    def fit(self, train_data, val_data):
+    def fit(self, train_data, val_data, load=False):
         '''
         Runs training/validation loop
 
@@ -101,6 +101,9 @@ class Model():
             sess.run(tf.global_variables_initializer())
             train_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/train/', graph=sess.graph)
             val_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/val/')
+            if load:
+                print("Restoring weights from {}".format(self.config.checkpoint_dir))
+                saver.restore(sess, self.config.checkpoints)
 
             training_handle = sess.run(train_iter_init.string_handle())
             val_handle = sess.run(val_iter_init.string_handle())
@@ -120,7 +123,7 @@ class Model():
                 if val_loss < best_loss:
                     best_loss = val_loss
                     if self.verbose:
-                        print("New best MSE! Saving model in {}".format(self.config.checkpoints))
+                        print("New best MSE! Saving model in {}".format(self.config.checkpoint_dir))
                     saver.save(sess, self.config.checkpoints)
                 if self.verbose: print()
 
@@ -134,7 +137,7 @@ class Model():
         iterator = input.make_initializable_iterator()
         self.input_data = iterator.get_next()
         with tf.Session() as sess:
-            saver.restore(sess, self.config.checkpoints)
+            saver.restore(sess, self.config.checkpoints+'checkpoint')
             sess.run(tf.global_variables_initializer())
             test_handle = sess.run(iterator.string_handle())
             sess.run(iterator.initializer)

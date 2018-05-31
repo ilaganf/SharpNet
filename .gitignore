@@ -12,6 +12,7 @@ data/val2017/
 architecture/inception_resnet_v2_2016_08_30.ckpt
 architecture/inception_resnet_v2_2016_08_30.tar.gz
 experiments/*/weights/
+experiments/*/tensorboard/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

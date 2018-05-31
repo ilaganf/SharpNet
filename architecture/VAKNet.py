@@ -80,7 +80,19 @@ class VAKNet(Model):
         with tf.variable_scope("training", reuse=tf.AUTO_REUSE):
             optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
             self.global_step = tf.train.get_or_create_global_step()
-        return optimizer.minimize(loss, global_step=self.global_step)
+            grads_and_vars = optimizer.compute_gradients(loss)
+            trainable_grads_and_vars = [g_v for g_v in grads_and_vars \
+                                        if "Inception" not in g_v[1].name]
+            train_grads = [g[0] for g in trainable_grads_and_vars]
+            train_vars = [v[1] for v in trainable_grads_and_vars]
+            if self.config.max_grad_norm != 0:
+                train_grads, _ = tf.clip_by_global_norm(train_grads, self.config.max_grad_norm)
+            self.grad_norm = tf.global_norm(train_grads)
+            train_op = optimizer.apply_gradients(zip(train_grads, train_vars))
+
+            assert self.grad_norm is not None, "Grad norms were set incorrectly"
+
+        return train_op
 
 
     def _resnet_activation(self, reconstructed):
@@ -92,7 +104,7 @@ class VAKNet(Model):
         return logits, end_points
 
 
-    def fit(self, train_data, val_data):
+    def fit(self, train_data, val_data, load=False):
         '''
         Runs training/validation loop
 
@@ -104,30 +116,20 @@ class VAKNet(Model):
         train_len = len(train_data)
         val_len = len(val_data)
         
-        #checkpoint_path = "architecture/inception_resnet_v2_2016_08_30.ckpt"
-        #reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path)
-        #var_to_shape_map = reader.get_variable_to_shape_map()
-        #tensors = []
-        #for key in var_to_shape_map:
-        #    tensors.append(reader.get_tensor(key))
-        #print(tensors)
-        #resnet_saver = tf.train.Saver(var_list=tensors, filename='architecture/inception_resnet_v2_2016_08_30.ckpt')
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
+
             # Restore weights for inception_resnet v2
             assert os.path.exists('architecture/inception_resnet_v2_2016_08_30.ckpt'), \
                 "You need to make sure the inception_resnet weights are in the same directory as this model"
-            #checkpoint_path = os.path.join(model_dir, "model.ckpt")
-            #reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path)
-            #var_to_shape_map = reader.get_variable_to_shape_map()
-            #for key in var_to_shape_map:
             optimistic_restore(sess, 'architecture/inception_resnet_v2_2016_08_30.ckpt', graph=sess.graph)
-            #resnet_saver.restore(sess, 'architecture/inception_resnet_v2_2016_08_30.ckpt')
             
             train_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/train/', graph=sess.graph)
             val_writer = tf.summary.FileWriter(self.config.tensorboard_dir + '/val/', graph=sess.graph)
+            if load:
+                print("Restoring weights from {}".format(self.config.checkpoint_dir))
+                saver.restore(sess, self.config.checkpoints)
 
-            
             training_handle = sess.run(train_iter_init.string_handle())
             val_handle = sess.run(val_iter_init.string_handle())
             
@@ -146,7 +148,7 @@ class VAKNet(Model):
                 if val_loss < best_loss:
                     best_loss = val_loss
                     if self.verbose:
-                        print("New best MSE! Saving model in {}".format(self.config.checkpoints))
+                        print("New best MSE! Saving model in {}".format(self.config.checkpoint_dir))
                     saver.save(sess, self.config.checkpoints)
                 if self.verbose: print()
 
