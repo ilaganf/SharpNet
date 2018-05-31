@@ -38,7 +38,7 @@ tf.app.flags.DEFINE_integer("save_every", 1, "Number of epochs between saving")
 tf.app.flags.DEFINE_float("learning_rate", .01, "Learning rate of the model")
 tf.app.flags.DEFINE_integer("batch_size", 16, "Batch size to use")
 tf.app.flags.DEFINE_integer("shuffle_buffer_size", 10000, "Size of shuffle buffer")
-tf.app.flags.DEFINE_string("load_params", "", "Directory from which to load params, if they've already been made")
+tf.app.flags.DEFINE_string("load_params", "", "Directory from which to load params, if they've already been made. If set, causes other parameters besides experiment name to be ignored.")
 tf.app.flags.DEFINE_float("max_grad_norm", 10.0, "Max norm at which to clip gradients. 0 turns off gradient clipping")
 
 FLAGS = tf.app.flags.FLAGS
@@ -66,8 +66,8 @@ def do_training(params):
                    if f.endswith('.jpg')]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
                    if f.endswith('.jpg')]
-    # model = VAKNet(params)
-    model = EnhanceNet(params)
+    model = VAKNet(params)
+    # model = EnhanceNet(params)
     model.fit(train_files, dev_files)
 
 

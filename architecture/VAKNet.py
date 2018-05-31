@@ -86,12 +86,12 @@ class VAKNet(Model):
             train_grads = [g[0] for g in trainable_grads_and_vars]
             train_vars = [v[1] for v in trainable_grads_and_vars]
             if self.config.max_grad_norm != 0:
-                train_grads, _ = tf.clip_by_global_norm(grads, self.config.max_grad_norm)
+                train_grads, _ = tf.clip_by_global_norm(train_grads, self.config.max_grad_norm)
             self.grad_norm = tf.global_norm(train_grads)
             train_op = optimizer.apply_gradients(zip(train_grads, train_vars))
 
             assert self.grad_norm is not None, "Grad norms were set incorrectly"
-            
+
         return train_op
 
 
