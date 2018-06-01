@@ -202,10 +202,14 @@ class Model():
         psnr = np.mean([[x[4]] for x in metrics])
         ssim = np.mean([[x[5]] for x in metrics])
         mse = np.mean([[x[6]] for x in metrics])
-        summary = tf.Summary(value=[tf.Summary.Value(tag='metrics/Loss', simple_value=loss),
-                                    tf.Summary.Value(tag="metrics/Squared Error", simple_value=mse),
-                                    tf.Summary.Value(tag='metrics/Peak Signal-to-Noise Ratio', simple_value=psnr),
-                                    tf.Summary.Value(tag='metrics/Structural Similarity', simple_value=ssim)]) 
+        values = [tf.Summary.Value(tag='metrics/Loss', simple_value=loss),
+                  tf.Summary.Value(tag="metrics/Squared Error", simple_value=mse),
+                  tf.Summary.Value(tag='metrics/Peak Signal-to-Noise Ratio', simple_value=psnr),
+                  tf.Summary.Value(tag='metrics/Structural Similarity', simple_value=ssim)]
+        if self.grad_norm is not None:
+            grad_norm = np.mean([[x[7]] for x in metrics])
+            values.append(tf.Summary.Value(tag='metrics/Grad Norm', simple_value=grad_norm))
+        summary = tf.Summary(value=values)
         important_metrics = (("Loss", loss), ("Squared Error", mse), ("PSNR", psnr), ("SSIM", ssim))
         return summary, important_metrics
    
