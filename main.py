@@ -99,6 +99,8 @@ def main(unused_argv):
                        'max_grad_norm':FLAGS.max_grad_norm}
         if os.path.exists(train_dir):
             shutil.rmtree(os.path.join(train_dir, 'tensorboard'))
+        else:
+            os.mkdir(train_dir)
         params = config.Config(is_new=True, path=train_dir, **config_dict)
 
     # Different behavior based on mode

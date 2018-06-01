@@ -8,7 +8,7 @@ from architecture.VAKNet import VAKNet
 
 class VAKNetV2(VAKNet):
     def add_prediction_op(self):
-        f1, f2, f3, f4, f5, f6, f7 = [7, 7, 7, 7, 7, 1, 5]
+        f1, f2, f3, f4, f5, f6, f7 = [7, 7, 7, 7, 7, 1, 2]
         n1, n2, n3, n4, n5, n6 = [64, 32, 16, 32, 64, 32]
 
         num_channels = 3
@@ -17,28 +17,35 @@ class VAKNetV2(VAKNet):
                                           kernel_size=f1, strides=1, padding='SAME', 
                                           kernel_initializer=tf.contrib.layers.xavier_initializer(),
                                           name='conv1')
+            print(layer1_out.shape)
             layer2_out = tf.layers.conv2d(inputs=layer1_out, filters=n2, 
                                           kernel_size=f2, strides=2, padding='SAME', 
                                           kernel_initializer=tf.contrib.layers.xavier_initializer(), 
                                           name='conv2')
+            print(layer2_out.shape)
             layer3_out = tf.layers.conv2d(inputs=layer2_out, filters=n3,
                                           kernel_size=f3, strides=2, padding='SAME',
                                           kernel_initializer=tf.contrib.layers.xavier_initializer(),
                                           name='conv3')
+            print(layer3_out.shape)
             layer4_out = tf.layers.conv2d_transpose(inputs=layer3_out, filters=n4, kernel_size=f4,
-                                                    strides=1, padding='SAME',
+                                                    strides=2, padding='SAME',
                                                     kernel_initializer=tf.contrib.layers.xavier_initializer(),
                                                     name='transpose_conv4')
+            print(layer4_out.shape)
             layer5_out = tf.layers.conv2d_transpose(inputs=layer4_out, filters=n5, kernel_size=f5,
-                                                    strides=1, padding='SAME',
+                                                    strides=2, padding='SAME',
                                                     kernel_initializer=tf.contrib.layers.xavier_initializer(),
                                                     name='transpose_conv5')
+            print(layer5_out.shape)
             layer6_out = tf.layers.conv2d(inputs=layer5_out, filters=n6, kernel_size=f6,
                                           strides=1, padding='SAME',
                                           kernel_initializer=tf.contrib.layers.xavier_initializer(),
                                           name='conv6')
+            print(layer6_out.shape)
             reconstructed = tf.layers.conv2d(inputs=layer6_out, filters=num_channels, 
-                                             kernel_size=f7, strides=1, padding='SAME', 
+                                             kernel_size=f7, strides=1, padding='VALID', 
                                              kernel_initializer=tf.contrib.layers.xavier_initializer(), 
                                              activation=None, name='output')
+            print(reconstructed.shape)
         return reconstructed
