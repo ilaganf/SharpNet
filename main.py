@@ -37,7 +37,7 @@ tf.app.flags.DEFINE_string("experiment_name", "", "Unique name for your experime
 tf.app.flags.DEFINE_integer("num_epochs", 5, "Number of epochs to train.")
 tf.app.flags.DEFINE_integer("save_every", 1, "Number of epochs between saving")
 tf.app.flags.DEFINE_float("learning_rate", .01, "Learning rate of the model")
-tf.app.flags.DEFINE_integer("batch_size", 16, "Batch size to use")
+tf.app.flags.DEFINE_integer("batch_size", 32, "Batch size to use")
 tf.app.flags.DEFINE_integer("shuffle_buffer_size", 10000, "Size of shuffle buffer")
 tf.app.flags.DEFINE_string("load_params", "", "Directory from which to load params, if they've already been made. If set, causes other parameters besides experiment name to be ignored.")
 tf.app.flags.DEFINE_float("max_grad_norm", 10.0, "Max norm at which to clip gradients. 0 turns off gradient clipping")
