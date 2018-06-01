@@ -8,6 +8,7 @@ class Model():
     def __init__(self, config, verbose=True):
         self.config = config
         self.verbose = verbose
+        self.grad_norm = None
     
     def get_ops(self):
         pred = self.pred
@@ -23,6 +24,9 @@ class Model():
     
             # MSE
             mse_op = tf.reduce_mean(tf.losses.mean_squared_error(pred, labels))
+
+        if self.grad_norm is not None:
+            return [ssim_op, psnr_op, mse_op, self.grad_norm]
         return [ssim_op, psnr_op, mse_op]
 
     
@@ -177,7 +181,8 @@ class Model():
             metric = (("Loss", output[0]), 
                       ("Squared Error", output[6]), 
                       ("PSNR", output[4]), 
-                      ("SSIM", output[5]))
+                      ("SSIM", output[5]),
+                      ("Grad Norm", output[7]))
             global_step = output[3]
             bar.add(self.config.batch_size, values=metric)
             if epoch_type == "train":
