@@ -35,7 +35,7 @@ class Model():
         Adds important graph functions as well as the global 
         step which is important for logging training progress
         '''
-        self.global_step = tf.Variable(0, trainable=False, name="global_step")
+        self.global_step = tf.Variable(0, trainable=False, dtype=tf.int64, name="global_step")
         self.is_training = tf.placeholder(tf.bool)
         self.pred = self.add_prediction_op()
         self.loss = self.add_loss_op(self.pred)

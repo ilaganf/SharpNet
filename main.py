@@ -26,6 +26,7 @@ import architecture.config as config
 #from architecture.input import input_op
 from architecture.EnhanceNet import EnhanceNet
 from architecture.VAKNet import VAKNet
+from architecture.VAKNet_v2 import VAKNetV2
 
 # Credit to 224N course staff for CLI code
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.abspath(__file__))) # relative path of the main directory
@@ -67,8 +68,9 @@ def do_training(params, load_weights=False):
                    if f.endswith('.jpg')]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
                    if f.endswith('.jpg')]
-    model = VAKNet(params)
+    # model = VAKNet(params)
     # model = EnhanceNet(params)
+    model = VAKNetV2(params)
     model.fit(train_files, dev_files, load_weights)
 
 
@@ -97,6 +99,8 @@ def main(unused_argv):
                        'max_grad_norm':FLAGS.max_grad_norm}
         if os.path.exists(train_dir):
             shutil.rmtree(os.path.join(train_dir, 'tensorboard'))
+        else:
+            os.mkdir(train_dir)
         params = config.Config(is_new=True, path=train_dir, **config_dict)
 
     # Different behavior based on mode
