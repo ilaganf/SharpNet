@@ -2,30 +2,16 @@
 VakNet.py
 '''
 import os
+
 from tensorflow.python import pywrap_tensorflow
 import tensorflow as tf
-from tensorflow.python.tools import inspect_checkpoint as chkp
+
 from architecture.inception_resnet_v2 import inception_resnet_v2, inception_resnet_v2_arg_scope
-import architecture.config as config
+from architecture.config import INPUT_SIZE
 from architecture.core.Model import Model
 
 
 class VAKNet(Model):
-    def build(self):
-        '''
-        Adds important graph functions as well as the global 
-        step which is important for logging training progress
-        '''
-
-        self.pred = self.add_prediction_op()
-        self.loss = self.add_loss_op(self.pred)
-        
-        self.global_step = tf.get_variable(name="global_step", shape=(), dtype=tf.int64, initializer=tf.zeros_initializer(dtype=tf.int64), trainable=False)
-        self.is_training = tf.placeholder(tf.bool)
-        
-        
-        self.train_op = self.add_training_op(self.loss)    
-        self.ops = self.get_ops()
 
     def add_prediction_op(self):
         f1, f2, f3 = [9, 1, 5] # Size of filter kernels
@@ -91,7 +77,7 @@ class VAKNet(Model):
 
 
     def _resnet_activation(self, reconstructed):
-        assert config.INPUT_SIZE == (299, 299), \
+        assert INPUT_SIZE == (299, 299), \
             "If using Inception Resnet, need 299x299 input images"
 
         with tf.contrib.slim.arg_scope(inception_resnet_v2_arg_scope()):
