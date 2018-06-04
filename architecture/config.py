@@ -11,10 +11,10 @@ import json
 # Data location #
 #################
 
-# TRAIN_DIR = './data/train2017/'
-# DEV_DIR = './data/val2017/'
-TRAIN_DIR = './data/train_debug/'
-DEV_DIR = './data/val_debug'
+TRAIN_DIR = './data/train2017/'
+DEV_DIR = './data/val2017/'
+# TRAIN_DIR = './data/train_debug/'
+# DEV_DIR = './data/val_debug'
 TEST_DIR = './data/test2017/'
 
 ######################
