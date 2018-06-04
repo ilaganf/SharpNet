@@ -42,3 +42,25 @@ class VAKNetV2(VAKNet):
                                              kernel_initializer=tf.contrib.layers.xavier_initializer(), 
                                              activation=None, name='output')
         return reconstructed
+
+
+class VAKNetV2L1(VAKNetV2):
+    def add_loss_op(self, pred):
+        '''
+        Adds the loss function to the graph
+        '''
+        with tf.variable_scope('loss', reuse=tf.AUTO_REUSE):
+            _, end_points = self._resnet_activation(pred)
+            pred_activation = end_points['Mixed_6a']
+            
+            loss = tf.losses.absolute_difference(
+                labels=self.input_data['high-res'],
+                predictions=pred,
+                reduction=tf.losses.Reduction.MEAN)
+            
+            _, target_points = self._resnet_activation(self.input_data['high-res'])
+            target = target_points['Mixed_6a']
+            loss += tf.losses.mean_squared_error(
+                        labels=target, predictions=pred_activation,
+                        reduction=tf.losses.Reduction.MEAN)
+        return loss
