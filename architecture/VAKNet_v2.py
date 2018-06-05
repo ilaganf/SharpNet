@@ -8,6 +8,10 @@ from architecture.VAKNet import VAKNet
 from architecture.inception_resnet_v2 import ENDPOINTS
 
 class VAKNetV2(VAKNet):
+    '''
+    Vaknet v2, which has a deeper downsampling-upsampling reconstruction
+    network 
+    '''
     def add_prediction_op(self):
         f1, f2, f3, f4, f5, f6, f7 = [7, 7, 7, 7, 7, 1, 2]
         n1, n2, n3, n4, n5, n6 = [64, 32, 16, 32, 64, 32]
@@ -46,6 +50,9 @@ class VAKNetV2(VAKNet):
 
 
 class VAKNetV2L1(VAKNetV2):
+    '''
+    Replaces the per-pixel L2 with per-pixel L1 loss
+    '''
     def add_loss_op(self, pred):
         '''
         Adds the loss function to the graph
@@ -68,6 +75,9 @@ class VAKNetV2L1(VAKNetV2):
 
 
 class VAKNetV2Resid(VAKNetV2):
+    '''
+    Learns the resdiduals instead of the full image
+    '''
     def add_loss_op(self, pred):
         with tf.variable_scope('loss', reuse=tf.AUTO_REUSE):
             pred_img = pred + self.input_data['low-res']
@@ -106,3 +116,45 @@ class VAKNetV2Resid(VAKNetV2):
         if self.grad_norm is not None:
             return [ssim_op, psnr_op, mse_op, self.grad_norm]
         return [ssim_op, psnr_op, mse_op]
+
+
+def VAKNetV2Features(VAKNetV2):
+    '''
+    Learns the residuals but only uses the summed feature vectors as
+    the loss function
+    '''
+    def add_loss_op(self, pred):
+        with tf.variable_scope('loss', reuse=tf.AUTO_REUSE):
+            pred_img = pred + self.input_data['low-res']
+
+            _, pred_end_points = self._resnet_activation(pred_img)
+            _, target_points = self._resnet_activation(self.input_data['high-res'])
+
+            # Sum up differences in representation over all activations
+            loss = tf.constant(0)
+            for endpoint in ENDPOINTS:
+                loss += tf.losses.mean_squared_error(
+                          labels=target_points[endpoint],
+                          predictions=pred_end_points[endpoint])
+        return loss
+
+
+    def get_ops(self):
+        pred = self.pred + self.input_data['low-res']
+        with tf.variable_scope("metrics", reuse=tf.AUTO_REUSE):
+            labels = self.input_data['high-res']
+            # SSIM
+            ssim_op = tf.reduce_mean(tf.image.ssim(pred, 
+                                               labels, max_val=1.0))
+            # PSNR
+            _labels = tf.reshape(labels, (self.config.batch_size, self.config.input_size[0], self.config.input_size[1], 3))
+            _pred = tf.reshape(pred, (self.config.batch_size, self.config.input_size[0], self.config.input_size[1], 3))
+            psnr_op = tf.reduce_mean(tf.image.psnr(_pred, _labels, max_val=1.0, name='psnr_op'))
+    
+            # MSE
+            mse_op = tf.reduce_mean(tf.losses.mean_squared_error(pred, labels))
+
+        if self.grad_norm is not None:
+            return [ssim_op, psnr_op, mse_op, self.grad_norm]
+        return [ssim_op, psnr_op, mse_op]
+
