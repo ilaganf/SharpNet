@@ -12,7 +12,9 @@ from architecture.core.Model import Model
 
 
 class VAKNet(Model):
-
+    '''
+    Vaknet, which adds the feature loss from inception_resnet v2
+    '''
     def add_prediction_op(self):
         f1, f2, f3 = [9, 1, 5] # Size of filter kernels
         n1, n2 = [64, 32] #Number of filters in layer
