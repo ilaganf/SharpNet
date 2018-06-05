@@ -100,39 +100,47 @@ def main(unused_argv):
     if len(unused_argv) != 1:
         raise Exception("There is a problem with the entered flags: %s" % unused_argv)
 
+    if not FLAGS.experiment_name:
+            raise Exception("You need to specify --experiment_name")
+
     # Define train_dir
-    if not FLAGS.experiment_name and FLAGS.mode != "eval" and FLAGS.mode != "predict":
-        raise Exception("You need to specify --experiment_name")
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
-
-    if FLAGS.load_params and FLAGS.mode == 'train':
-        params = config.Config(is_new=False, path=FLAGS.load_params)
-        if os.path.exists(train_dir) and not FLAGS.warm_start:
-            shutil.rmtree(params.tensorboard_dir)
-            os.mkdir(os.path.join(params.basepath, 'tensorboard/'))
-    elif FLAGS.load_params:
-        params = config.Config(is_new=False, path=FLAGS.load_params)
-    else:
-        # Load FLAGS into dict to save as a Config object later
-        config_dict = {'experiment_name':FLAGS.experiment_name,
-                       'save_every':FLAGS.save_every, 'num_epochs':FLAGS.num_epochs,
-                       'learning_rate':FLAGS.learning_rate, 'batch_size':FLAGS.batch_size,
-                       'shuffle_buffer_size':FLAGS.shuffle_buffer_size,
-                       'max_grad_norm':FLAGS.max_grad_norm}
-        if os.path.exists(train_dir):
-            tens = os.path.join(train_dir, 'tensorboard')
-            if os.path.exists(tens):
-                shutil.rmtree(tens)
-        else:
-            os.mkdir(train_dir)
-        params = config.Config(is_new=True, path=train_dir, **config_dict)
-
-    # Different behavior based on mode
+    
     if FLAGS.mode == 'train':
+        if os.path.exists(os.path.join(train_dir, 'weights/')):
+            print("Mode is 'train', but weights for experiment '{}' already exist.".format(FLAGS.experiment_name))
+            instruction = input("Do you want to proceed and overwrite? (y/n): ")
+            while instruction.strip().lower() not in ['y', 'n']:
+                instruction = input("Please enter y or n: ")
+            if instruction.strip().lower() == 'n':
+                print("Abort mission")
+                return
+        if FLAGS.load_params:
+            params = config.Config(is_new=False, path=FLAGS.load_params)
+            if os.path.exists(train_dir) and not FLAGS.warm_start:
+                shutil.rmtree(params.tensorboard_dir)
+                os.mkdir(os.path.join(params.basepath, 'tensorboard/'))
+        else:
+            # Load FLAGS into dict to save as a Config object later
+            config_dict = {'experiment_name':FLAGS.experiment_name,
+                           'save_every':FLAGS.save_every, 'num_epochs':FLAGS.num_epochs,
+                           'learning_rate':FLAGS.learning_rate, 'batch_size':FLAGS.batch_size,
+                           'shuffle_buffer_size':FLAGS.shuffle_buffer_size,
+                           'max_grad_norm':FLAGS.max_grad_norm}
+            if os.path.exists(train_dir):
+                tens = os.path.join(train_dir, 'tensorboard')
+                if os.path.exists(tens):
+                    shutil.rmtree(tens)
+            else:
+                os.mkdir(train_dir)
+            params = config.Config(is_new=True, path=train_dir, **config_dict)
         do_training(params, FLAGS.warm_start)
     elif FLAGS.mode == 'eval':
         pass
     elif FLAGS.mode == 'predict':
+        print("Mode is 'predict': ignoring all other flags besides --experiment_name")
+        print("Loading parameters and weights from {}".format(train_dir))
+        params = config.Config(is_new=False, path=train_dir)
         do_prediction(params)
     else:
         raise Exception("Unexpected value of FLAGS.mode: %s" % FLAGS.mode)
