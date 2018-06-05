@@ -3,25 +3,26 @@ import tensorflow as tf
 import scipy.stats as st
 import numpy as np
 import architecture.core.utils as utils
+import architecture.config as config
 
 class Model():
     def __init__(self, config, verbose=True):
         self.config = config
         self.verbose = verbose
         self.grad_norm = None
-    
+
     def get_ops(self):
         pred = self.pred
         with tf.variable_scope("metrics", reuse=tf.AUTO_REUSE):
             labels = self.input_data['high-res']
             # SSIM
-            ssim_op = tf.reduce_mean(tf.image.ssim(pred, 
+            ssim_op = tf.reduce_mean(tf.image.ssim(pred,
                                                labels, max_val=1.0))
             # PSNR
             _labels = tf.reshape(labels, (self.config.batch_size, self.config.input_size[0], self.config.input_size[1], 3))
             _pred = tf.reshape(pred, (self.config.batch_size, self.config.input_size[0], self.config.input_size[1], 3))
             psnr_op = tf.reduce_mean(tf.image.psnr(_pred, _labels, max_val=1.0, name='psnr_op'))
-    
+
             # MSE
             mse_op = tf.reduce_mean(tf.losses.mean_squared_error(pred, labels))
 
@@ -29,28 +30,28 @@ class Model():
             return [ssim_op, psnr_op, mse_op, self.grad_norm]
         return [ssim_op, psnr_op, mse_op]
 
-    
+
     def build(self):
         '''
-        Adds important graph functions as well as the global 
+        Adds important graph functions as well as the global
         step which is important for logging training progress
         '''
         self.global_step = tf.Variable(0, trainable=False, dtype=tf.int64, name="global_step")
         self.is_training = tf.placeholder(tf.bool)
         self.pred = self.add_prediction_op()
         self.loss = self.add_loss_op(self.pred)
-        self.train_op = self.add_training_op(self.loss)    
+        self.train_op = self.add_training_op(self.loss)
         self.ops = self.get_ops()
-   
-        
+
+
     def input_op(self, data, epoch_type):
         '''
         Creates the dataset object to be run and used for training/evaluating
-        
+
         Args:
         filenames: list of filenames (including path) of input images
         params: Config object that contains model hyperparameters
-        is_training: boolean of wheter 
+        is_training: boolean of wheter
         '''
         with tf.variable_scope('input', reuse=tf.AUTO_REUSE):
             dataset = tf.data.Dataset.from_tensor_slices({'low-res': tf.constant(data),
@@ -61,11 +62,29 @@ class Model():
             # versions of all the input images to use as training input
             if epoch_type == "train":
                 dataset = dataset.shuffle(self.config.shuffle_buffer_size).prefetch(1)
+
             dataset = dataset.map(lambda x: utils.parse_image_fn(x))
             dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.config.batch_size))
         return dataset
-        
-    
+
+
+    def predict_input_op(self, data):
+
+        def read_image(filename):
+            fname = filename['low-res']
+            image_string = tf.read_file(fname)
+            decoded = tf.image.decode_jpeg(image_string, channels=3)
+            image = tf.image.convert_image_dtype(decoded, tf.float32)
+            resized = tf.image.resize_images(image, config.INPUT_SIZE)
+            return {'low-res': resized, 'high-res': resized}
+
+        with tf.variable_scope('input', reuse=tf.AUTO_REUSE):
+            dataset = tf.data.Dataset.from_tensor_slices({'low-res': tf.constant(data)})
+            dataset = dataset.map(lambda x: read_image(x))
+            dataset = dataset.batch(self.config.batch_size)
+        return dataset
+
+
     def add_prediction_op(self):
         '''
         Adds the workhouse prediction structure to the graph.
@@ -74,14 +93,14 @@ class Model():
         '''
         raise NotImplementedError("Do not instantiate a base Model class")
 
-    
+
     def add_loss_op(self, pred):
         '''
         Adds the loss function to the graph
         '''
         raise NotImplementedError("Do not inbstantiate a base Model class")
 
-    
+
     def add_train_op(self, loss):
         '''
         Adds the training operations (optimizer and gradient
@@ -89,7 +108,7 @@ class Model():
         '''
         raise NotImplementedError("Do not inbstantiate a base Model class")
 
-      
+
     def fit(self, train_data, val_data, load=False):
         '''
         Runs training/validation loop
@@ -116,7 +135,7 @@ class Model():
             for epoch in range(self.config.num_epochs):
                 if self.verbose:
                     print("Epoch {}\n".format(epoch+1))
-                sess.run(train_iter_init.initializer)        
+                sess.run(train_iter_init.initializer)
                 sess.run(val_iter_init.initializer)
                 train_metrics = self.run_epoch(sess, training_handle, train_writer, "train", train_len)
                 val_metrics = self.run_epoch(sess, val_handle, val_writer, "val", val_len)
@@ -131,31 +150,26 @@ class Model():
                     saver.save(sess, self.config.checkpoints)
                 if self.verbose: print()
 
-                
+
     def predict(self, data):
-        '''
-        @data is a pandas dataframe
-        '''
-        saver = tf.train.Saver(max_to_keep = 1)
-        input = self.input_op(data, "val")
-        iterator = input.make_initializable_iterator()
+        input_data = self.predict_input_op(data)
+        iterator = input_data.make_one_shot_iterator()
         self.input_data = iterator.get_next()
+        self.build()
+        saver = tf.train.Saver(max_to_keep = 1)
         with tf.Session() as sess:
-            saver.restore(sess, self.config.checkpoints+'checkpoint')
-            sess.run(tf.global_variables_initializer())
-            test_handle = sess.run(iterator.string_handle())
-            sess.run(iterator.initializer)
+            saver.restore(sess, self.config.checkpoints)
+            # sess.run(tf.global_variables_initializer())
             preds = []
             while True:
                 try:
-                    _pred = sess.run(self.pred, feed_dict={self.handle: test_handle,
-                                                           self.is_training: False})
+                    _pred = sess.run(self.pred)
                     preds.append(_pred)
                 except tf.errors.OutOfRangeError:
                     break
         return np.concatenate(preds)
 
-    
+
     def _prepare_train_val(self, train_data, dev_data):
         train_input, val_input = self.input_op(train_data, "train"), self.input_op(dev_data, "val")
         train_iter_init = train_input.make_initializable_iterator()
@@ -166,11 +180,11 @@ class Model():
                                                        train_input.output_shapes)
         return train_iter_init, val_iter_init, iterator.get_next()
 
-    
+
     def run_epoch(self, sess, handle, writer, epoch_type, data_len):
         metrics = []
         ops = [self.loss, self.pred, self.input_data, self.global_step] + self.get_ops()
-        if epoch_type == "train": ops += [self.train_op] 
+        if epoch_type == "train": ops += [self.train_op]
         bar = tf.keras.utils.Progbar(target=data_len)
         while True:
             try:
@@ -178,9 +192,9 @@ class Model():
                 metrics.append(output[0:len(ops) - (epoch_type=="train")])
             except tf.errors.OutOfRangeError:
                 break
-            metric = (("Loss", output[0]), 
-                      ("Squared Error", output[6]), 
-                      ("PSNR", output[4]), 
+            metric = (("Loss", output[0]),
+                      ("Squared Error", output[6]),
+                      ("PSNR", output[4]),
                       ("SSIM", output[5]),
                       ("Grad Norm", output[7]))
             global_step = output[3]
@@ -194,7 +208,7 @@ class Model():
             writer.add_summary(summary, global_step)
         return important_metrics
 
-    
+
     def make_summary(self, metrics, epoch_type):
         loss = np.mean([x[0] for x in metrics])
         pred = np.mean([x[1] for x in metrics])
@@ -212,8 +226,8 @@ class Model():
         summary = tf.Summary(value=values)
         important_metrics = (("Loss", loss), ("Squared Error", mse), ("PSNR", psnr), ("SSIM", ssim))
         return summary, important_metrics
-   
-            
+
+
     def weight_l2(self):
         weights = [var for var in tf.trainable_variables() if 'weights' in str(var)]
         l2 = np.sum([tf.nn.l2_loss(var) for var in weights])
