@@ -65,9 +65,9 @@ def do_training(params, load_weights=False):
     tf.set_random_seed(12345)
 
     train_files = [os.path.join(config.TRAIN_DIR, f) for f in os.listdir(config.TRAIN_DIR)
-                   if f.endswith('.jpg')]
+                   if f.endswith('.jpg')][:30000]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
-                   if f.endswith('.jpg')]
+                   if f.endswith('.jpg')][:3000]
     # model = EnhanceNet(params)
     # model = VAKNet(params)
     # model = VAKNetV2(params)
@@ -100,7 +100,9 @@ def main(unused_argv):
                        'shuffle_buffer_size':FLAGS.shuffle_buffer_size,
                        'max_grad_norm':FLAGS.max_grad_norm}
         if os.path.exists(train_dir):
-            shutil.rmtree(os.path.join(train_dir, 'tensorboard'))
+            tens = os.path.join(train_dir, 'tensorboard')
+            if os.path.exists(tens):
+                shutil.rmtree(tens)
         else:
             os.mkdir(train_dir)
         params = config.Config(is_new=True, path=train_dir, **config_dict)
