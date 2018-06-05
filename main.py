@@ -26,7 +26,7 @@ import architecture.config as config
 #from architecture.input import input_op
 from architecture.EnhanceNet import EnhanceNet
 from architecture.VAKNet import VAKNet
-from architecture.VAKNet_v2 import VAKNetV2
+from architecture.VAKNet_v2 import VAKNetV2, VAKNetV2L1, VAKNetV2Resid
 
 # Credit to 224N course staff for CLI code
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.abspath(__file__))) # relative path of the main directory
@@ -65,12 +65,14 @@ def do_training(params, load_weights=False):
     tf.set_random_seed(12345)
 
     train_files = [os.path.join(config.TRAIN_DIR, f) for f in os.listdir(config.TRAIN_DIR)
-                   if f.endswith('.jpg')]
+                   if f.endswith('.jpg')][:30000]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
-                   if f.endswith('.jpg')]
-    # model = VAKNet(params)
+                   if f.endswith('.jpg')][:3000]
     # model = EnhanceNet(params)
-    model = VAKNetV2(params)
+    # model = VAKNet(params)
+    # model = VAKNetV2(params)
+    # model = VAKNetV2L1(params)
+    model = VAKNetV2Resid(params)
     model.fit(train_files, dev_files, load_weights)
 
 
@@ -98,7 +100,9 @@ def main(unused_argv):
                        'shuffle_buffer_size':FLAGS.shuffle_buffer_size,
                        'max_grad_norm':FLAGS.max_grad_norm}
         if os.path.exists(train_dir):
-            shutil.rmtree(os.path.join(train_dir, 'tensorboard'))
+            tens = os.path.join(train_dir, 'tensorboard')
+            if os.path.exists(tens):
+                shutil.rmtree(tens)
         else:
             os.mkdir(train_dir)
         params = config.Config(is_new=True, path=train_dir, **config_dict)
