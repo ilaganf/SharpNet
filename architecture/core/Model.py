@@ -112,7 +112,7 @@ class Model():
             training_handle = sess.run(train_iter_init.string_handle())
             val_handle = sess.run(val_iter_init.string_handle())
             
-            best_ssim = float("-inf")
+            best_loss = float("inf")
             for epoch in range(self.config.num_epochs):
                 if self.verbose:
                     print("Epoch {}\n".format(epoch+1))
@@ -123,11 +123,11 @@ class Model():
                 train_metrics = [("Train_" + x[0], x[1]) for x in train_metrics]
                 val_metrics = [("Val_" + x[0], x[1]) for x in val_metrics]
                 
-                val_ssim = val_metrics[0][3] # loss, mse, psnr, ssim
-                if val_ssim > best_ssim:
-                    best_ssim = val_ssim
+                val_loss = val_metrics[0][0] # loss, mse, psnr, ssim
+                if val_loss < best_loss:
+                    best_loss = val_loss
                     if self.verbose:
-                        print("New best SSIM! Saving model in {}".format(self.config.checkpoint_dir))
+                        print("\nNew best validation loss! Saving model in {}".format(self.config.checkpoint_dir))
                     saver.save(sess, self.config.checkpoints)
                 if self.verbose: print()
 
