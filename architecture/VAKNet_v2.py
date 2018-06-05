@@ -86,3 +86,23 @@ class VAKNetV2Resid(VAKNetV2):
                           labels=target_points[endpoint],
                           predictions=pred_end_points[endpoint])
         return loss
+
+
+    def get_ops(self):
+        pred = self.pred + self.input_data['low-res']
+        with tf.variable_scope("metrics", reuse=tf.AUTO_REUSE):
+            labels = self.input_data['high-res']
+            # SSIM
+            ssim_op = tf.reduce_mean(tf.image.ssim(pred, 
+                                               labels, max_val=1.0))
+            # PSNR
+            _labels = tf.reshape(labels, (self.config.batch_size, self.config.input_size[0], self.config.input_size[1], 3))
+            _pred = tf.reshape(pred, (self.config.batch_size, self.config.input_size[0], self.config.input_size[1], 3))
+            psnr_op = tf.reduce_mean(tf.image.psnr(_pred, _labels, max_val=1.0, name='psnr_op'))
+    
+            # MSE
+            mse_op = tf.reduce_mean(tf.losses.mean_squared_error(pred, labels))
+
+        if self.grad_norm is not None:
+            return [ssim_op, psnr_op, mse_op, self.grad_norm]
+        return [ssim_op, psnr_op, mse_op]
