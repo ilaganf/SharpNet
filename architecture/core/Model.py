@@ -59,9 +59,9 @@ class Model():
             # Load all the images from the filenames,
             # Properly re-size them all, then create low-res
             # versions of all the input images to use as training input
-            dataset = dataset.map(lambda x: utils.parse_image_fn(x))
             if epoch_type == "train":
                 dataset = dataset.shuffle(self.config.shuffle_buffer_size).prefetch(1)
+            dataset = dataset.map(lambda x: utils.parse_image_fn(x))
             dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.config.batch_size))
         return dataset
         

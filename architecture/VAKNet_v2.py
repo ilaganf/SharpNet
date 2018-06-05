@@ -5,6 +5,7 @@ VAKNet_v2.py
 import tensorflow as tf
 
 from architecture.VAKNet import VAKNet
+from architecture.inception_resnet_v2 import ENDPOINTS
 
 class VAKNetV2(VAKNet):
     def add_prediction_op(self):
@@ -63,4 +64,25 @@ class VAKNetV2L1(VAKNetV2):
             loss += tf.losses.mean_squared_error(
                         labels=target, predictions=pred_activation,
                         reduction=tf.losses.Reduction.MEAN)
+        return loss
+
+
+class VAKNetV2Resid(VAKNetV2):
+    def add_loss_op(self, pred):
+        with tf.variable_scope('loss', reuse=tf.AUTO_REUSE):
+            pred_img = pred + self.input_data['low-res']
+
+            _, pred_end_points = self._resnet_activation(pred_img)
+            _, target_points = self._resnet_activation(self.input_data['high-res'])
+
+            # L1 loss for residual
+            loss = tf.losses.absolute_difference(
+                labels=(self.input_data['high-res'] - self.input_data['low-res']),
+                predictions=pred, reduction=tf.losses.Reduction.MEAN)
+
+            # Sum up differences in representation over all activations
+            for endpoint in ENDPOINTS:
+                loss += tf.losses.mean_squared_error(
+                          labels=target_points[endpoint],
+                          predictions=pred_end_points[endpoint])
         return loss
