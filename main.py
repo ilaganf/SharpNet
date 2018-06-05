@@ -1,12 +1,12 @@
 '''
 main.py
 
-Run this file to load, train, 
+Run this file to load, train,
 and do whatever, coordinated with command line arguments
 
 do_training: Coordinates loading in the data from ./data/, initializing
 a model with the desired hyperparameters,
-training the model, then writing the results and 
+training the model, then writing the results and
 model checkpoints to ./experiments/
 '''
 
@@ -17,6 +17,7 @@ import shutil
 
 # Package imports go here
 import tensorflow as tf
+import numpy as np
 
 # Project imports go here
 import architecture
@@ -46,8 +47,24 @@ tf.app.flags.DEFINE_bool("warm_start", False, "Whether or not to load existing w
 FLAGS = tf.app.flags.FLAGS
 
 
-def do_prediction():
-    pass
+def do_prediction(params):
+    pred_files = [os.path.join(config.PRED_DIR_IN, f) for f in os.listdir(config.PRED_DIR_IN)
+                  if f.endswith('.jpg')]
+
+    # Depending on the model, might need to add extra code to add residuals back to the low_res input
+    test_model = VAKNetV2L1(params)
+
+    outputs = test_model.predict(pred_files)
+    outputs *= 255
+
+    input = tf.placeholder(tf.uint8)
+    encode_op = tf.image.encode_jpeg(input, quality=100)
+
+    with tf.Session() as sess:
+        for i, img in enumerate(outputs):
+            encoded = sess.run(encode_op, {input: img})
+            with open(config.PRED_DIR_OUT + str(i) + '.jpeg', 'wb') as f:
+                f.write(encoded)
 
 
 def do_evaluation(params):
@@ -87,11 +104,13 @@ def main(unused_argv):
         raise Exception("You need to specify --experiment_name")
     train_dir = os.path.join(EXPERIMENTS_DIR, FLAGS.experiment_name)
 
-    if FLAGS.load_params:
+    if FLAGS.load_params and FLAGS.mode == 'train':
         params = config.Config(is_new=False, path=FLAGS.load_params)
         if os.path.exists(train_dir) and not FLAGS.warm_start:
             shutil.rmtree(params.tensorboard_dir)
             os.mkdir(os.path.join(params.basepath, 'tensorboard/'))
+    elif FLAGS.load_params:
+        params = config.Config(is_new=False, path=FLAGS.load_params)
     else:
         # Load FLAGS into dict to save as a Config object later
         config_dict = {'experiment_name':FLAGS.experiment_name,
@@ -113,7 +132,7 @@ def main(unused_argv):
     elif FLAGS.mode == 'eval':
         pass
     elif FLAGS.mode == 'predict':
-        pass
+        do_prediction(params)
     else:
         raise Exception("Unexpected value of FLAGS.mode: %s" % FLAGS.mode)
 

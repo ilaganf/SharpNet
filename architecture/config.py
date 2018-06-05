@@ -16,6 +16,8 @@ DEV_DIR = './data/val2017/'
 # TRAIN_DIR = './data/train_debug/'
 # DEV_DIR = './data/val_debug'
 TEST_DIR = './data/test2017/'
+PRED_DIR_IN = './prediction_inputs/'
+PRED_DIR_OUT = './prediction_outputs/'
 
 ######################
 # Training constants #
@@ -54,11 +56,11 @@ class Config():
             self.batch_size = kwargs.get('batch_size', 16)
             self.max_grad_norm = kwargs.get('max_grad_norm', 0)
             self.grad_norm = None
-            
+
             # Input parameters
             self.shuffle_buffer_size = kwargs.get('shuffle_buffer_size', 10000)
             self.input_size = kwargs.get('input_size', INPUT_SIZE)
-            
+
             self.write_params(self.basepath+'/params.json')
         else:
             fname = os.path.join(path, 'params.json')
