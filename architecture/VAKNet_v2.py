@@ -131,7 +131,7 @@ class VAKNetV2Features(VAKNetV2):
             _, target_points = self._resnet_activation(self.input_data['high-res'])
 
             # Sum up differences in representation over all activations
-            loss = tf.constant(0)
+            loss = tf.constant(0.0)
             for endpoint in ENDPOINTS:
                 loss += tf.losses.mean_squared_error(
                           labels=target_points[endpoint],
