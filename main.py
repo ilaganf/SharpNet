@@ -91,8 +91,6 @@ def do_training(params, load_weights=False):
     # model = VAKNetV2L1(params)
     # model = VAKNetV2Resid(params)
     model = VAKNetV2Features(params)
-    print(type(model))
-    print(type(params))
     model.fit(train_files, dev_files, load_weights)
 
 
