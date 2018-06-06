@@ -118,7 +118,7 @@ class VAKNetV2Resid(VAKNetV2):
         return [ssim_op, psnr_op, mse_op]
 
 
-def VAKNetV2Features(VAKNetV2):
+class VAKNetV2Features(VAKNetV2):
     '''
     Learns the residuals but only uses the summed feature vectors as
     the loss function
