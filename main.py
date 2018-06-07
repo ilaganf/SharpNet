@@ -54,15 +54,18 @@ def do_prediction(params):
                   if f.endswith('.jpg')]
 
     # Depending on the model, might need to add extra code to add residuals back to the low_res input
-    test_model = VAKNetV2(params)
-
+    test_model = EnhanceNet(params)
+    #test_model = VAKNet(params)
+    #test_model = VAKNetV2(params)
+    #test_model = VAKNetV2Resid(params)
+    
     outputs = test_model.predict(pred_files)
     input_imgs = []
     for file in pred_files:
         input_imgs.append(scipy.ndimage.imread(file))
     input_imgs = np.array(input_imgs)
-    outputs = input_imgs - 255*outputs
-    #outputs *= 255
+    #outputs = input_imgs - 255*outputs
+    outputs *= 255
     
     input = tf.placeholder(tf.uint8)
     encode_op = tf.image.encode_jpeg(input, quality=100)
@@ -76,14 +79,27 @@ def do_prediction(params):
 
 def do_evaluation(params):
     test_files = [os.path.join(config.TEST_DIR, f) for f in os.listdir(config.TEST_DIR)
-                  if f.endswith('.jpg')]
-    test_data, test_initializer = input_op(test_files, params, is_training=False)
-
-    test_model = EnhanceNet(test_data, test_initializer, params, is_training=False)
-
-    avg_loss, avg_ssim, avg_psnr = evaluate(test_model, params) # TODO: return some sample images
-
-
+                  if f.endswith('.jpg')]#[:20000]
+    #test_model = VAKNetV2(params)
+    #test_model = EnhanceNet(params)
+    #test_model = VAKNet(params)
+    #test_model = VAKNetV2Resid(params)
+    
+    mse, ssim, psnr = test_model.evaluate(test_files) # TODO: return some sample images
+    mse_mean = np.mean(mse)
+    mse_std = np.std(mse)
+    ssim_mean = np.mean(ssim)
+    ssim_std = np.std(ssim)
+    psnr_mean = np.mean(psnr)
+    psnr_std = np.std(psnr)
+    print("MSE Mean:", mse_mean)
+    print("MSE Std:", mse_std)
+    print("SSIM Mean:", ssim_mean)
+    print("SSIM Std:", ssim_std)
+    print("PSNR Mean:", psnr_mean)
+    print("PSNR Std:", psnr_std)
+    
+    
 def do_training(params, load_weights=False):
     # Make experiments reproducible
     tf.set_random_seed(12345)
@@ -144,7 +160,10 @@ def main(unused_argv):
             params = config.Config(is_new=True, path=train_dir, **config_dict)
         do_training(params, FLAGS.warm_start)
     elif FLAGS.mode == 'eval':
-        pass
+         print("Mode is 'eval': ignoring all other flags besides --experiment_name")
+         print("Loading parameters and weights from {}".format(train_dir))
+         params = config.Config(is_new=False, path=train_dir)
+         do_evaluation(params)
     elif FLAGS.mode == 'predict':
         print("Mode is 'predict': ignoring all other flags besides --experiment_name")
         print("Loading parameters and weights from {}".format(train_dir))

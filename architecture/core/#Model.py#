@@ -115,7 +115,6 @@ class Model():
         '''
         train_iter_init, val_iter_init, self.input_data = self._prepare_train_val(train_data, val_data)
         self.build()
-        print("Number of parameters:", sum(v.get_shape().num_elements() for v in tf.trainable_variables()))
         saver = tf.train.Saver(max_to_keep=1)
         train_len = len(train_data)
         val_len = len(val_data)
@@ -141,8 +140,7 @@ class Model():
                 train_metrics = [("Train_" + x[0], x[1]) for x in train_metrics]
                 val_metrics = [("Val_" + x[0], x[1]) for x in val_metrics]
                 
-                val_loss = val_metrics[0][1] # loss, mse, psnr, ssim
-                print(val_loss, best_loss)
+                val_loss = val_metrics[0][0] # loss, mse, psnr, ssim
                 if val_loss < best_loss:
                     best_loss = val_loss
                     if self.verbose:
