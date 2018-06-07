@@ -18,6 +18,7 @@ import shutil
 # Package imports go here
 import tensorflow as tf
 import numpy as np
+import scipy
 
 # Project imports go here
 import architecture
@@ -52,11 +53,16 @@ def do_prediction(params):
                   if f.endswith('.jpg')]
 
     # Depending on the model, might need to add extra code to add residuals back to the low_res input
-    test_model = VAKNetV2L1(params)
+    test_model = VAKNetV2(params)
 
     outputs = test_model.predict(pred_files)
-    outputs *= 255
-
+    input_imgs = []
+    for file in pred_files:
+        input_imgs.append(scipy.ndimage.imread(file))
+    input_imgs = np.array(input_imgs)
+    outputs = input_imgs - 255*outputs
+    #outputs *= 255
+    
     input = tf.placeholder(tf.uint8)
     encode_op = tf.image.encode_jpeg(input, quality=100)
 
@@ -82,15 +88,15 @@ def do_training(params, load_weights=False):
     tf.set_random_seed(12345)
 
     train_files = [os.path.join(config.TRAIN_DIR, f) for f in os.listdir(config.TRAIN_DIR)
-                   if f.endswith('.jpg')][:30000]
+                   if f.endswith('.jpg')][:60000]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
-                   if f.endswith('.jpg')][:3000]
-    # model = EnhanceNet(params)
+                   if f.endswith('.jpg')]#[:5000]
+    model = EnhanceNet(params)
     # model = VAKNet(params)
     # model = VAKNetV2(params)
     # model = VAKNetV2L1(params)
-    # model = VAKNetV2Resid(params)
-    model = VAKNetV2Features(params)
+    #model = VAKNetV2Resid(params)
+    #model = VAKNetV2Features(params)
     model.fit(train_files, dev_files, load_weights)
 
 

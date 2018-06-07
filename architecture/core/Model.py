@@ -25,7 +25,6 @@ class Model():
 
             # MSE
             mse_op = tf.reduce_mean(tf.losses.mean_squared_error(pred, labels))
-
         if self.grad_norm is not None:
             return [ssim_op, psnr_op, mse_op, self.grad_norm]
         return [ssim_op, psnr_op, mse_op]
@@ -62,7 +61,6 @@ class Model():
             # versions of all the input images to use as training input
             if epoch_type == "train":
                 dataset = dataset.shuffle(self.config.shuffle_buffer_size).prefetch(1)
-
             dataset = dataset.map(lambda x: utils.parse_image_fn(x))
             dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(self.config.batch_size))
         return dataset
@@ -184,8 +182,15 @@ class Model():
     def run_epoch(self, sess, handle, writer, epoch_type, data_len):
         metrics = []
         ops = [self.loss, self.pred, self.input_data, self.global_step] + self.get_ops()
+
+        tf.summary.image("High-res", self.input_data['high-res'])
+        tf.summary.image("Low-res", self.input_data['low-res'])
+        tf.summary.image('Pred', self.pred)
+        image_summary_op = tf.summary.merge_all()
+        ops.append(image_summary_op)
         if epoch_type == "train": ops += [self.train_op]
         bar = tf.keras.utils.Progbar(target=data_len)
+        i = 0 
         while True:
             try:
                 output = sess.run(ops, feed_dict={self.handle: handle, self.is_training: epoch_type == "train"})
@@ -199,10 +204,15 @@ class Model():
                       ("Grad Norm", output[7]))
             global_step = output[3]
             bar.add(self.config.batch_size, values=metric)
+            if i % 100 == 0:
+                print("image")
+                image_summary = output[8]
+                writer.add_summary(image_summary, global_step)
             if epoch_type == "train":
                 metrics = metrics[-1]
                 summary, important_metrics = self.make_summary([metrics], epoch_type)
                 writer.add_summary(summary, global_step)
+            i += 1
         if epoch_type == "val":
             summary, important_metrics = self.make_summary(metrics, epoch_type)
             writer.add_summary(summary, global_step)

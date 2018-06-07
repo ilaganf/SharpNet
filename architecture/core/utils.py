@@ -83,3 +83,5 @@ def parse_image_fn(fnames):
     high_res = read_image(n_high_res)
     return {"low-res":low_res, "high-res":high_res}
 
+if __name__=="__main__":
+    save_distorted_image("./0_low_res.jpg", "./ok.jpg")
