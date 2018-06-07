@@ -29,6 +29,7 @@ import architecture.config as config
 from architecture.EnhanceNet import EnhanceNet
 from architecture.VAKNet import VAKNet
 from architecture.VAKNet_v2 import VAKNetV2, VAKNetV2L1, VAKNetV2Resid, VAKNetV2Features
+from architecture.VAKNetDeep import VAKNetDeep
 
 # Credit to 224N course staff for CLI code
 MAIN_DIR = os.path.relpath(os.path.dirname(os.path.abspath(__file__))) # relative path of the main directory
@@ -106,13 +107,14 @@ def do_training(params, load_weights=False):
     train_files = [os.path.join(config.TRAIN_DIR, f) for f in os.listdir(config.TRAIN_DIR)
                    if f.endswith('.jpg')][:60000]
     dev_files = [os.path.join(config.DEV_DIR, f) for f in os.listdir(config.DEV_DIR)
-                   if f.endswith('.jpg')]#[0:60]#[:5000]
-    #model = EnhanceNet(params)
-    model = VAKNet(params)
-    #model = VAKNetV2(params)
+                   if f.endswith('.jpg')]#[:5000]
+    # model = EnhanceNet(params)
+    # model = VAKNet(params)
+    # model = VAKNetV2(params)
     # model = VAKNetV2L1(params)
-    #model = VAKNetV2Resid(params)
-    #model = VAKNetV2Features(params)
+    # model = VAKNetV2Resid(params)
+    # model = VAKNetV2Features(params)
+    model = VAKNetDeep(params)
     model.fit(train_files, dev_files, load_weights)
 
 

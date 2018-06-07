@@ -115,6 +115,7 @@ class Model():
         '''
         train_iter_init, val_iter_init, self.input_data = self._prepare_train_val(train_data, val_data)
         self.build()
+        print("Number of parameters:", sum(v.get_shape().num_elements() for v in tf.trainable_variables()))
         saver = tf.train.Saver(max_to_keep=1)
         train_len = len(train_data)
         val_len = len(val_data)
