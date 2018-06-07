@@ -41,7 +41,7 @@ def visual_debug(param, test_files):
 
 def main():
     tf.set_random_seed(12345)
-    param = config.Config(is_new=False, path="./experiments/vaknet_v2_base_tiny")
+    param = config.Config(is_new=False, path="./experiments/vaknet_v2")
     test_files = [os.path.join(debug_dataset, f) for f in os.listdir(debug_dataset)
                   if f.endswith('.jpg') or f.endswith('.png')]
     visual_debug(param, test_files)

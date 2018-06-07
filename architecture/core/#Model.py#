@@ -140,8 +140,7 @@ class Model():
                 train_metrics = [("Train_" + x[0], x[1]) for x in train_metrics]
                 val_metrics = [("Val_" + x[0], x[1]) for x in val_metrics]
                 
-                val_loss = val_metrics[0][1] # loss, mse, psnr, ssim
-                print(val_loss, best_loss)
+                val_loss = val_metrics[0][0] # loss, mse, psnr, ssim
                 if val_loss < best_loss:
                     best_loss = val_loss
                     if self.verbose:
