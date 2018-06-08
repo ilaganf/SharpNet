@@ -3,19 +3,71 @@ VAKNet_deep.py
 '''
 
 import tensorflow as tf
+import numpy as np
 
 from architecture.VAKNet import VAKNet
 from architecture.inception_resnet_v2 import ENDPOINTS
 
 
 class VAKNetDeep(VAKNet):
+    def predict(self, data):
+        input_data = self.predict_input_op(data)
+        iterator = input_data.make_one_shot_iterator()
+        self.input_data = iterator.get_next()
+        self.build()
+        saver = tf.train.Saver(max_to_keep = 1)
+        with tf.Session() as sess:
+            saver.restore(sess, self.config.checkpoints)
+            # sess.run(tf.global_variables_initializer())
+            preds = []
+            while True:
+                try:
+                    _pred, input = sess.run([self.pred, self.input_data])
+                    preds.append(input['low-res']-_pred)
+                except tf.errors.OutOfRangeError:
+                    break
+        return np.concatenate(preds)
+
+    def evaluate(self, data):
+        input_data = self.input_op(data, epoch_type="val")
+        iterator = input_data.make_one_shot_iterator()
+        self.input_data = iterator.get_next()
+        self.build()
+        saver = tf.train.Saver(max_to_keep = 1)
+        labels = self.input_data['high-res']
+        pred = self.input_data['low-res'] - self.pred
+        mse_op = tf.reduce_mean(tf.losses.mean_squared_error(pred, labels))
+        ssim_op = tf.reduce_mean(tf.image.ssim(pred,
+                                               labels, max_val=1.0))
+        _labels = tf.reshape(labels, (self.config.batch_size, self.config.input_size[0], self.config.input_size[1], 3))
+        _pred = tf.reshape(pred, (self.config.batch_size, self.config.input_size[0], self.config.input_size[1], 3))
+        psnr_op = tf.reduce_mean(tf.image.psnr(_pred, _labels, max_val=1.0, name='psnr_op'))
+        mse, ssim, psnr = [], [], []
+        with tf.Session() as sess:
+            saver.restore(sess, self.config.checkpoints)
+            preds = []
+            bar = tf.keras.utils.Progbar(target=len(data))
+            i = 0
+            while True:
+                try:
+                    _mse, _ssim, _psnr = sess.run([mse_op, ssim_op, psnr_op]) 
+                    mse.append(_mse)
+                    ssim.append(_ssim)
+                    psnr.append(_psnr)
+                except tf.errors.OutOfRangeError:
+                    break
+                metric = (("Squared Error", _mse),
+                      ("PSNR", _psnr),
+                      ("SSIM", _ssim))
+                bar.add(self.config.batch_size, values=metric)
+        return mse, ssim, psnr
 
     def add_prediction_op(self):
         with tf.variable_scope('model_prediction', reuse=tf.AUTO_REUSE):
             z = tf.layers.conv2d(self.input_data['low-res'], 64, 7, 1, padding='SAME',
                                  kernel_initializer=tf.contrib.layers.xavier_initializer(),
                                  name='conv_input')
-            for i in range(10):
+            for i in range(3):
                 block_name = "res_block%d"%i
                 z = resid_block(block_name, z)
             out = tf.layers.conv2d(z, 3, 5, 1, padding='SAME', kernel_initializer=tf.contrib.layers.xavier_initializer(),

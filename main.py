@@ -54,10 +54,11 @@ def do_prediction(params):
                   if f.endswith('.jpg')]
 
     # Depending on the model, might need to add extra code to add residuals back to the low_res input
-    test_model = EnhanceNet(params)
+    #test_model = EnhanceNet(params)
     #test_model = VAKNet(params)
     #test_model = VAKNetV2(params)
     #test_model = VAKNetV2Resid(params)
+    test_model = VAKNetDeep(params)
     
     outputs = test_model.predict(pred_files)
     input_imgs = []
@@ -84,6 +85,7 @@ def do_evaluation(params):
     #test_model = EnhanceNet(params)
     #test_model = VAKNet(params)
     #test_model = VAKNetV2Resid(params)
+    test_model = VAKNetDeep(params)
     
     mse, ssim, psnr = test_model.evaluate(test_files) # TODO: return some sample images
     mse_mean = np.mean(mse)

@@ -27,7 +27,7 @@ INPUT_SIZE = (299, 299)
 ######################
 # Blurring constants #
 ######################
-downscale_size = (72, 72)#(144,144) #
+downscale_size = (144, 144)#(72, 72)#(144,144) #
 kernel_length  = 3
 gaussian_sig   = 1
 
